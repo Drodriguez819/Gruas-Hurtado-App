@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gruas Hurtado Management App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <h1>Gruas Hurtado App</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContainer">
+        <div class="header">
+            <h1>Gruas Hurtado Management</h1>
+            <div class="header-right">
+                <div class="user-info">
+                    <p><strong id="displayName"></strong></p>
+                    <p id="displayRole"></p>
+                </div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h2>Menu</h2>
+                <ul class="sidebar-menu">
+                    <li><a onclick="showPage('dashboard')" class="menu-item active">Dashboard</a></li>
+                    <li><a onclick="showPage('client-profiles')" class="menu-item">Client Profiles</a></li>
+                    <li><a onclick="showPage('employee-accounts')" class="menu-item">Employee Accounts</a></li>
+                    <li><a onclick="showPage('service-requests')" class="menu-item">Service Requests</a></li>
+                </ul>
+            </div>
+
+            <div class="content-area">
+                <div class="alert" id="alert"></div>
+
+                <div class="page active" id="dashboard">
+                    <h2 class="page-title">Dashboard</h2>
+                    <div class="card">
+                        <div class="card-title">Welcome</div>
+                        <p id="dashboardWelcome"></p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Quick Stats</div>
+                        <div id="dashboardStats"></div>
+                    </div>
+                </div>
+
+                <div class="page" id="client-profiles">
+                    <h2 class="page-title">Client Profiles</h2>
+                    <div class="card">
+                        <div class="card-title">Create New Client Profile</div>
+                        
+                        <!-- Customer Information Section -->
+                        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Customer Information</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <select id="newCustomerTitle">
+                                        <option value="">Select Title</option>
+                                        <option value="Mr.">Mr.</option>
+                                        <option value="Ms.">Ms.</option>
+                                        <option value="Dr.">Dr.</option>
+                                        <option value="Prof.">Prof.</option>
+                                        <option value="Mrs.">Mrs.</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>First Name</label>
+                                    <input type="text" id="newCustomerFirstName" placeholder="Enter first name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Last Name</label>
+                                    <input type="text" id="newCustomerLastName" placeholder="Enter last name">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>Telephone Number</label>
+                                    <input type="tel" id="newCustomerPhone" placeholder="Enter phone number">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Vehicle Information Section -->
+                        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Vehicle Year</label>
+                                    <input type="text" id="newVehicleYear" placeholder="e.g., 2020">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Make</label>
+                                    <input type="text" id="newVehicleMake" placeholder="e.g., Honda">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Model</label>
+                                    <input type="text" id="newVehicleModel" placeholder="e.g., Civic">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>Vehicle Plate</label>
+                                    <input type="text" id="newVehiclePlate" placeholder="Enter license plate">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Color</label>
+                                    <input type="text" id="newVehicleColor" placeholder="e.g., Blue">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>Vehicle Location</label>
+                                    <input type="text" id="newVehicleLocation" placeholder="Enter address">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-success" onclick="createClientProfile()">Create Profile</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">All Client Profiles</div>
+                        <div style="margin-bottom: 15px;">
+                            <input type="text" id="clientSearchInput" placeholder="Search by name, phone, vehicle, location, or plate..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                            <button type="button" class="btn btn-primary" onclick="searchClientProfiles()" style="margin-top: 10px;">Search</button>
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('clientSearchInput').value = ''; loadClientProfiles();" style="margin-top: 10px;">Clear</button>
+                        </div>
+                        <div id="clientProfilesContainer"></div>
+                    </div>
+                </div>
+
+                <div class="page" id="employee-accounts">
+                    <h2 class="page-title">Employee Accounts</h2>
+                    <div class="card" id="createAccountCard" style="display: none;">
+                        <div class="card-title">Create New Account</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="newUsername" placeholder="Enter username">
+                            </div>
+                            <div class="form-group">
+                                <label>Account Type</label>
+                                <select id="newAccountType">
+                                    <option value="">Select account type</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="user">User</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Temporary Password</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="newPassword" placeholder="Enter password or generate one">
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="generateTempPassword()">Generate</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                <input type="checkbox" id="markTemporary"> Mark as temporary (user must change on next login)
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-success" onclick="createEmployeeAccount()">Create Account</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Employees</div>
+                        <div id="employeeAccountsContainer"></div>
+                    </div>
+                </div>
+
+                <div class="page" id="service-requests">
+                    <h2 class="page-title">Service Requests</h2>
+                    
+                    <!-- Create Service Request Card -->
+                    <div class="card">
+                        <div class="card-title">Create New Service Request</div>
+                        
+                        <!-- Request Info Section -->
+                        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Request Information</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Select Client</label>
+                                    <select id="newServiceClientId">
+                                        <option value="">Select a client...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Job Type</label>
+                                    <select id="newServiceJobType">
+                                        <option value="">Select job type</option>
+                                        <option value="Tow">Tow</option>
+                                        <option value="Recovery">Recovery</option>
+                                        <option value="Transport">Transport</option>
+                                        <option value="Roadside Assistance">Roadside Assistance</option>
+                                        <option value="Lockout">Lockout</option>
+                                        <option value="Jump Start">Jump Start</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>Priority</label>
+                                    <select id="newServicePriority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Emergency">Emergency</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Requested Date & Time</label>
+                                    <input type="datetime-local" id="newServiceRequestedDate">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea id="newServiceDescription" placeholder="Describe the service request..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Assignment Section -->
+                        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Assignment</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Assign To (Optional)</label>
+                                    <select id="newServiceAssignedTo">
+                                        <option value="">Unassigned</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Estimated Cost</label>
+                                    <input type="number" id="newServiceCost" placeholder="0.00" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-success" onclick="createServiceRequest()">Create Service Request</button>
+                    </div>
+                    
+                    <!-- Service Requests List -->
+                    <div class="card">
+                        <div class="card-title">All Service Requests</div>
+                        
+                        <!-- Filters -->
+                        <div style="margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;">
+                            <select id="serviceStatusFilter" onchange="filterServiceRequests()">
+                                <option value="">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Assigned">Assigned</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            <select id="servicePriorityFilter" onchange="filterServiceRequests()">
+                                <option value="">All Priorities</option>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Emergency">Emergency</option>
+                            </select>
+                            <input type="text" id="serviceSearchInput" placeholder="Search by client name..." onkeyup="filterServiceRequests()">
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('serviceStatusFilter').value = ''; document.getElementById('servicePriorityFilter').value = ''; document.getElementById('serviceSearchInput').value = ''; loadServiceRequests();">Clear Filters</button>
+                        </div>
+                        
+                        <div id="serviceRequestsContainer"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editClientModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Edit Client Profile</span>
+                <button type="button" class="close-btn" onclick="closeModal('editClientModal')">&times;</button>
+            </div>
+            
+            <!-- Customer Information Section -->
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Customer Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <select id="editCustomerTitle">
+                            <option value="">Select Title</option>
+                            <option value="Mr.">Mr.</option>
+                            <option value="Ms.">Ms.</option>
+                            <option value="Dr.">Dr.</option>
+                            <option value="Prof.">Prof.</option>
+                            <option value="Mrs.">Mrs.</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="editCustomerFirstName">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="editCustomerLastName">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Telephone Number</label>
+                        <input type="tel" id="editCustomerPhone" placeholder="Enter phone number">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vehicle Information Section -->
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Vehicle Year</label>
+                        <input type="text" id="editVehicleYear">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Make</label>
+                        <input type="text" id="editVehicleMake">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Model</label>
+                        <input type="text" id="editVehicleModel">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Vehicle Plate</label>
+                        <input type="text" id="editVehiclePlate">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Color</label>
+                        <input type="text" id="editVehicleColor">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Vehicle Location</label>
+                        <input type="text" id="editVehicleLocation" placeholder="Enter address">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group info-text" id="editClientHistory"></div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editClientModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveClientProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Change Password Required</span>
+                <button type="button" class="close-btn" onclick="closeModal('changePasswordModal')">&times;</button>
+            </div>
+            <p>Your password is temporary. Please create a new permanent password:</p>
+            <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Enter temporary password">
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPasswordField" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPasswordField" placeholder="Confirm new password">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="submitPasswordChange()">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editEmployeeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Edit Employee Account</span>
+                <button type="button" class="close-btn" onclick="closeModal('editEmployeeModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="editEmployeeUsername" disabled>
+            </div>
+            <div class="form-group">
+                <label>Account Type</label>
+                <select id="editEmployeeType">
+                    <option value="user">User</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteEmployeeAccount()">Delete Account</button>
+                <button type="button" class="btn btn-primary" onclick="saveEmployeeAccount()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="editServiceRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Edit Service Request</span>
+                <button type="button" class="close-btn" onclick="closeModal('editServiceRequestModal')">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editServiceRequestId">
+            
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Request Details</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Job Type</label>
+                        <select id="editServiceJobType">
+                            <option value="Tow">Tow</option>
+                            <option value="Recovery">Recovery</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Roadside Assistance">Roadside Assistance</option>
+                            <option value="Lockout">Lockout</option>
+                            <option value="Jump Start">Jump Start</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="editServicePriority">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="editServiceStatus">
+                            <option value="Pending">Pending</option>
+                            <option value="Assigned">Assigned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Assign To</label>
+                        <select id="editServiceAssignedTo">
+                            <option value="">Unassigned</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="editServiceDescription" placeholder="Describe the service request..." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Additional Info</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Cost</label>
+                        <input type="number" id="editServiceCost" placeholder="0.00" min="0" step="0.01">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="editServiceNotes" placeholder="Add any notes..." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editServiceRequestModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveServiceRequest()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>
