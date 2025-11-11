@@ -1,5 +1,4 @@
-const API_URL = 'http://127.0.0.1:5000/api';
-let currentUser = null;
+const API_URL = 'https://gruas-hurtado-app.onrender.com/api';let currentUser = null;
 let editingClientId = null;
 let editingEmployeeId = null;
 
