@@ -691,23 +691,6 @@ async function createServiceRequest() {
     }
 }
 
-async function openEditServiceRequestModal(id) {
-    try {
-        const req = await apiCall(`/service-requests/${id}`, 'GET');
-        document.getElementById('editServiceRequestId').value = id;
-        document.getElementById('editServiceJobType').value = req.jobType;
-        document.getElementById('editServiceDescription').value = req.description;
-        document.getElementById('editServicePriority').value = req.priority;
-        document.getElementById('editServiceStatus').value = req.status;
-        document.getElementById('editServiceAssignedTo').value = req.assignedTo || '';
-        document.getElementById('editServiceCost').value = req.cost;
-        document.getElementById('editServiceNotes').value = req.notes || '';
-        document.getElementById('editServiceRequestModal').classList.add('active');
-    } catch (error) {
-        showAlert(error.message, 'danger');
-    }
-}
-
 async function populateEditServiceEmployeeDropdown() {
     try {
         const employees = await apiCall('/auth/users', 'GET');
@@ -721,6 +704,30 @@ async function populateEditServiceEmployeeDropdown() {
         });
     } catch (error) {
         console.error('Error loading employees:', error);
+    }
+}
+
+async function openEditServiceRequestModal(id) {
+    try {
+        // Populate the dropdown FIRST
+        await populateEditServiceEmployeeDropdown();
+        
+        // Then get the request data
+        const req = await apiCall(`/service-requests/${id}`, 'GET');
+        document.getElementById('editServiceRequestId').value = id;
+        document.getElementById('editServiceJobType').value = req.jobType;
+        document.getElementById('editServiceDescription').value = req.description;
+        document.getElementById('editServicePriority').value = req.priority;
+        document.getElementById('editServiceStatus').value = req.status;
+        document.getElementById('editServiceCost').value = req.cost;
+        document.getElementById('editServiceNotes').value = req.notes || '';
+        
+        // Set the assigned employee AFTER populating the dropdown
+        document.getElementById('editServiceAssignedTo').value = req.assigned_to || '';
+        
+        document.getElementById('editServiceRequestModal').classList.add('active');
+    } catch (error) {
+        showAlert(error.message, 'danger');
     }
 }
 
