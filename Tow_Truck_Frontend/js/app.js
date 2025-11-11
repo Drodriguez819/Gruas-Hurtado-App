@@ -708,6 +708,22 @@ async function openEditServiceRequestModal(id) {
     }
 }
 
+async function populateEditServiceEmployeeDropdown() {
+    try {
+        const employees = await apiCall('/auth/users', 'GET');
+        const dropdown = document.getElementById('editServiceAssignedTo');
+        dropdown.innerHTML = '<option value="">Unassigned</option>';
+        employees.forEach(emp => {
+            const option = document.createElement('option');
+            option.value = emp.username;
+            option.textContent = `${emp.name} (${emp.role})`;
+            dropdown.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading employees:', error);
+    }
+}
+
 async function saveServiceRequest() {
     const id = document.getElementById('editServiceRequestId').value;
     const jobType = document.getElementById('editServiceJobType').value;
