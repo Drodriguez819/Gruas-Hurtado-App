@@ -9,7 +9,7 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tow_truck.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tow_truck.db').replace('postgresql://', 'postgresql+psycopg://')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'your-secret-key-change-this'
     
