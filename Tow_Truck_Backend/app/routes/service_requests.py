@@ -43,6 +43,12 @@ def create_service_request():
         
         service_req = ServiceRequest(
             client_id=data.get('client_id'),
+            vehicle_year=data.get('vehicle_year', ''),
+            vehicle_make=data.get('vehicle_make', ''),
+            vehicle_model=data.get('vehicle_model', ''),
+            vehicle_plate=data.get('vehicle_plate', ''),
+            vehicle_color=data.get('vehicle_color', ''),
+            vehicle_location=data.get('vehicle_location', ''),
             job_type=data.get('job_type'),
             description=data.get('description'),
             priority=data.get('priority', 'Medium'),
@@ -73,6 +79,20 @@ def update_service_request(request_id):
         
         data = request.get_json()
         
+        if 'client_id' in data:
+            service_req.client_id = data['client_id']
+        if 'vehicle_year' in data:
+            service_req.vehicle_year = data['vehicle_year']
+        if 'vehicle_make' in data:
+            service_req.vehicle_make = data['vehicle_make']
+        if 'vehicle_model' in data:
+            service_req.vehicle_model = data['vehicle_model']
+        if 'vehicle_plate' in data:
+            service_req.vehicle_plate = data['vehicle_plate']
+        if 'vehicle_color' in data:
+            service_req.vehicle_color = data['vehicle_color']
+        if 'vehicle_location' in data:
+            service_req.vehicle_location = data['vehicle_location']
         if 'job_type' in data:
             service_req.job_type = data['job_type']
         if 'description' in data:
@@ -91,6 +111,12 @@ def update_service_request(request_id):
             service_req.notes = data['notes']
         if 'completion_date' in data and data['completion_date']:
             service_req.completion_date = datetime.fromisoformat(data['completion_date'])
+        
+        # Track who edited it
+        if 'last_edited_by' in data:
+            service_req.last_edited_by = data['last_edited_by']
+        if 'last_edited_by_name' in data:
+            service_req.last_edited_by_name = data['last_edited_by_name']
         
         db.session.commit()
         
