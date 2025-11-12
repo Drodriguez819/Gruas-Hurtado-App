@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tow Truck Management App</title>
-    <link rel="stylesheet" href="css/style.css?v=1.0">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <!-- Login Page -->
@@ -22,6 +22,13 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Login</button>
             </form>
+            <div class="demo-login">
+                <p><strong>Demo Accounts:</strong></p>
+                <button type="button" class="btn btn-sm btn-secondary demo-btn" onclick="demoLogin('super_admin', 'password123')">Super Admin</button>
+                <button type="button" class="btn btn-sm btn-secondary demo-btn" onclick="demoLogin('admin1', 'password123')">Admin</button>
+                <button type="button" class="btn btn-sm btn-secondary demo-btn" onclick="demoLogin('manager1', 'password123')">Manager</button>
+                <button type="button" class="btn btn-sm btn-secondary demo-btn" onclick="demoLogin('user1', 'password123')">User</button>
+            </div>
         </div>
     </div>
 
@@ -73,66 +80,20 @@
                         <!-- Customer Information Section -->
                         <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
                             <h3 style="margin-top: 0; margin-bottom: 15px;">Customer Information</h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div class="form-group">
-                                    <label>Title</label>
-                                    <select id="newCustomerTitle">
-                                        <option value="">Select Title</option>
-                                        <option value="Mr.">Mr.</option>
-                                        <option value="Ms.">Ms.</option>
-                                        <option value="Dr.">Dr.</option>
-                                        <option value="Prof.">Prof.</option>
-                                        <option value="Mrs.">Mrs.</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>First Name</label>
+                                    <label>First Name *</label>
                                     <input type="text" id="newCustomerFirstName" placeholder="Enter first name">
                                 </div>
                                 <div class="form-group">
-                                    <label>Last Name</label>
+                                    <label>Last Name *</label>
                                     <input type="text" id="newCustomerLastName" placeholder="Enter last name">
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
                                 <div class="form-group">
-                                    <label>Telephone Number</label>
+                                    <label>Telephone Number *</label>
                                     <input type="tel" id="newCustomerPhone" placeholder="Enter phone number">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Vehicle Information Section -->
-                        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                            <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                                <div class="form-group">
-                                    <label>Vehicle Year</label>
-                                    <input type="text" id="newVehicleYear" placeholder="e.g., 2020">
-                                </div>
-                                <div class="form-group">
-                                    <label>Vehicle Make</label>
-                                    <input type="text" id="newVehicleMake" placeholder="e.g., Honda">
-                                </div>
-                                <div class="form-group">
-                                    <label>Vehicle Model</label>
-                                    <input type="text" id="newVehicleModel" placeholder="e.g., Civic">
-                                </div>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                                <div class="form-group">
-                                    <label>Vehicle Plate</label>
-                                    <input type="text" id="newVehiclePlate" placeholder="Enter license plate">
-                                </div>
-                                <div class="form-group">
-                                    <label>Vehicle Color</label>
-                                    <input type="text" id="newVehicleColor" placeholder="e.g., Blue">
-                                </div>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
-                                <div class="form-group">
-                                    <label>Vehicle Location</label>
-                                    <input type="text" id="newVehicleLocation" placeholder="Enter address">
                                 </div>
                             </div>
                         </div>
@@ -142,7 +103,7 @@
                     <div class="card">
                         <div class="card-title">All Client Profiles</div>
                         <div style="margin-bottom: 15px;">
-                            <input type="text" id="clientSearchInput" placeholder="Search by name, phone, vehicle, location, or plate..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                            <input type="text" id="clientSearchInput" placeholder="Search by name or phone..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                             <button type="button" class="btn btn-primary" onclick="searchClientProfiles()" style="margin-top: 10px;">Search</button>
                             <button type="button" class="btn btn-secondary" onclick="document.getElementById('clientSearchInput').value = ''; loadClientProfiles();" style="margin-top: 10px;">Clear</button>
                         </div>
@@ -203,13 +164,13 @@
                             <h3 style="margin-top: 0; margin-bottom: 15px;">Request Information</h3>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div class="form-group">
-                                    <label>Select Client</label>
+                                    <label>Select Client *</label>
                                     <select id="newServiceClientId">
                                         <option value="">Select a client...</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Job Type</label>
+                                    <label>Job Type *</label>
                                     <select id="newServiceJobType">
                                         <option value="">Select job type</option>
                                         <option value="Tow">Tow</option>
@@ -224,7 +185,7 @@
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                                 <div class="form-group">
-                                    <label>Priority</label>
+                                    <label>Priority *</label>
                                     <select id="newServicePriority">
                                         <option value="Low">Low</option>
                                         <option value="Medium" selected>Medium</option>
@@ -233,13 +194,52 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Requested Date & Time</label>
+                                    <label>Requested Date & Time *</label>
                                     <input type="datetime-local" id="newServiceRequestedDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vehicle Information Section -->
+                        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Vehicle Year</label>
+                                    <input type="text" id="newVehicleYear" placeholder="e.g., 2020">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Make</label>
+                                    <input type="text" id="newVehicleMake" placeholder="e.g., Honda">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Model</label>
+                                    <input type="text" id="newVehicleModel" placeholder="e.g., Civic">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>Vehicle Plate</label>
+                                    <input type="text" id="newVehiclePlate" placeholder="Enter license plate">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Color</label>
+                                    <input type="text" id="newVehicleColor" placeholder="e.g., Blue">
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
                                 <div class="form-group">
-                                    <label>Description</label>
+                                    <label>Vehicle Location</label>
+                                    <input type="text" id="newVehicleLocation" placeholder="Enter address">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Section -->
+                        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Description</h3>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                                <div class="form-group">
                                     <textarea id="newServiceDescription" placeholder="Describe the service request..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
                                 </div>
                             </div>
@@ -308,18 +308,7 @@
             <!-- Customer Information Section -->
             <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
                 <h3 style="margin-top: 0; margin-bottom: 15px;">Customer Information</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Title</label>
-                        <select id="editCustomerTitle">
-                            <option value="">Select Title</option>
-                            <option value="Mr.">Mr.</option>
-                            <option value="Ms.">Ms.</option>
-                            <option value="Dr.">Dr.</option>
-                            <option value="Prof.">Prof.</option>
-                            <option value="Mrs.">Mrs.</option>
-                        </select>
-                    </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>First Name</label>
                         <input type="text" id="editCustomerFirstName">
@@ -333,41 +322,6 @@
                     <div class="form-group">
                         <label>Telephone Number</label>
                         <input type="tel" id="editCustomerPhone" placeholder="Enter phone number">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Vehicle Information Section -->
-            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Vehicle Year</label>
-                        <input type="text" id="editVehicleYear">
-                    </div>
-                    <div class="form-group">
-                        <label>Vehicle Make</label>
-                        <input type="text" id="editVehicleMake">
-                    </div>
-                    <div class="form-group">
-                        <label>Vehicle Model</label>
-                        <input type="text" id="editVehicleModel">
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                    <div class="form-group">
-                        <label>Vehicle Plate</label>
-                        <input type="text" id="editVehiclePlate">
-                    </div>
-                    <div class="form-group">
-                        <label>Vehicle Color</label>
-                        <input type="text" id="editVehicleColor">
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
-                    <div class="form-group">
-                        <label>Vehicle Location</label>
-                        <input type="text" id="editVehicleLocation" placeholder="Enter address">
                     </div>
                 </div>
             </div>
@@ -431,6 +385,24 @@
             </div>
         </div>
     </div>
+
+    <!-- View Service Request Modal -->
+    <div class="modal" id="viewServiceRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>View Service Request</span>
+                <button type="button" class="close-btn" onclick="closeModal('viewServiceRequestModal')">&times;</button>
+            </div>
+            
+            <div id="viewServiceRequestContent"></div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('viewServiceRequestModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Service Request Modal -->
     <div class="modal" id="editServiceRequestModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -444,6 +416,12 @@
                 <h3 style="margin-top: 0; margin-bottom: 15px;">Request Details</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
+                        <label>Client *</label>
+                        <select id="editServiceClientId">
+                            <option value="">Select a client...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Job Type</label>
                         <select id="editServiceJobType">
                             <option value="Tow">Tow</option>
@@ -455,6 +433,8 @@
                             <option value="Other">Other</option>
                         </select>
                     </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                     <div class="form-group">
                         <label>Priority</label>
                         <select id="editServicePriority">
@@ -464,8 +444,6 @@
                             <option value="Emergency">Emergency</option>
                         </select>
                     </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                     <div class="form-group">
                         <label>Status</label>
                         <select id="editServiceStatus">
@@ -476,12 +454,6 @@
                             <option value="Cancelled">Cancelled</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Assign To</label>
-                        <select id="editServiceAssignedTo">
-                            <option value="">Unassigned</option>
-                        </select>
-                    </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
                     <div class="form-group">
@@ -490,10 +462,51 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Vehicle Information Section -->
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Vehicle Year</label>
+                        <input type="text" id="editVehicleYear" placeholder="e.g., 2020">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Make</label>
+                        <input type="text" id="editVehicleMake" placeholder="e.g., Honda">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Model</label>
+                        <input type="text" id="editVehicleModel" placeholder="e.g., Civic">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Vehicle Plate</label>
+                        <input type="text" id="editVehiclePlate" placeholder="Enter license plate">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Color</label>
+                        <input type="text" id="editVehicleColor" placeholder="e.g., Blue">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Vehicle Location</label>
+                        <input type="text" id="editVehicleLocation" placeholder="Enter address">
+                    </div>
+                </div>
+            </div>
+
             <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
                 <h3 style="margin-top: 0; margin-bottom: 15px;">Additional Info</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Assign To</label>
+                        <select id="editServiceAssignedTo">
+                            <option value="">Unassigned</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label>Cost</label>
                         <input type="number" id="editServiceCost" placeholder="0.00" min="0" step="0.01">
@@ -507,12 +520,15 @@
                 </div>
             </div>
             
+            <div id="editServiceAuditInfo"></div>
+            
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('editServiceRequestModal')">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="saveServiceRequest()">Save Changes</button>
             </div>
         </div>
     </div>
-    <script src="js/app.js?v=1.0"></script>
+
+    <script src="js/app.js"></script>
 </body>
 </html>
