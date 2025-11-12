@@ -85,12 +85,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
-function demoLogin(username, password) {
-    document.getElementById('username').value = username;
-    document.getElementById('password').value = password;
-    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-}
-
 function showApp() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('appContainer').classList.add('active');
@@ -567,7 +561,7 @@ function displayServiceRequests(requests) {
         return;
     }
     
-    let html = '<table class="table" style="font-size: 14px;"><thead><tr><th>ID</th><th>Client</th><th>Job Type</th><th>Priority</th><th>Status</th><th>Requested Date</th><th>Cost</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table class="table" style="font-size: 14px;"><thead><tr><th>ID</th><th>Client</th><th>Job Type</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Requested Date</th><th>Cost</th><th>Actions</th></tr></thead><tbody>';
     
     requests.forEach(req => {
         const priorityColor = req.priority === 'Emergency' ? 'red' : req.priority === 'High' ? 'orange' : 'green';
@@ -594,6 +588,7 @@ function displayServiceRequests(requests) {
                 <td>${req.jobType}</td>
                 <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
                 <td><span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 3px;">${req.status}</span></td>
+                <td>${req.assignedToName || 'Unassigned'}</td>
                 <td>${req.requestedDate}</td>
                 <td>$${req.cost.toFixed(2)}</td>
                 <td>
