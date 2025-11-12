@@ -559,38 +559,6 @@ async function populateEmployeeDropdown() {
     }
 }
 
-async function populateEditServiceClientDropdown() {
-    try {
-        const clients = await apiCall('/clients', 'GET');
-        const dropdown = document.getElementById('editServiceClientId');
-        dropdown.innerHTML = '<option value="">Select a client...</option>';
-        clients.forEach(client => {
-            const option = document.createElement('option');
-            option.value = client.id;
-            option.textContent = `${client.CustomerFirstName} ${client.CustomerLastName}`;
-            dropdown.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error loading clients:', error);
-    }
-}
-
-async function populateEditServiceEmployeeDropdown() {
-    try {
-        const employees = await apiCall('/auth/users', 'GET');
-        const dropdown = document.getElementById('editServiceAssignedTo');
-        dropdown.innerHTML = '<option value="">Unassigned</option>';
-        employees.forEach(emp => {
-            const option = document.createElement('option');
-            option.value = emp.username;
-            option.textContent = `${emp.name} (${emp.role})`;
-            dropdown.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error loading employees:', error);
-    }
-}
-
 function displayServiceRequests(requests) {
     const container = document.getElementById('serviceRequestsContainer');
     
@@ -605,20 +573,36 @@ function displayServiceRequests(requests) {
         const priorityColor = req.priority === 'Emergency' ? 'red' : req.priority === 'High' ? 'orange' : 'green';
         const statusColor = req.status === 'Pending' ? '#FFA500' : req.status === 'In Progress' ? '#4169E1' : req.status === 'Completed' ? '#228B22' : '#999';
         
-        html += `<tr>
-            <td>${req.id}</td>
-            <td>${req.clientName}</td>
-            <td>${req.jobType}</td>
-            <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
-            <td><span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 3px;">${req.status}</span></td>
-            <td>${req.requestedDate}</td>
-            <td>$${req.cost.toFixed(2)}</td>
-            <td>
-                <button class="btn btn-sm btn-info" onclick="openViewServiceRequestModal(${req.id})">View</button>
-                ${canEditServiceRequest() ? `<button class="btn btn-sm btn-primary" onclick="openEditServiceRequestModal(${req.id})">Edit</button>` : ''}
-                ${canEditServiceRequest() ? `<button class="btn btn-sm btn-danger" onclick="deleteServiceRequest(${req.id})">Delete</button>` : ''}
-            </td>
-        </tr>`;
+        // Handle old requests that might not have vehicle fields
+        if (!req.vehicleYear && !req.vehicleMake) {
+            html += `<tr style="opacity: 0.6;">
+                <td>${req.id}</td>
+                <td>${req.clientName}</td>
+                <td>${req.jobType}</td>
+                <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
+                <td><span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 3px;">${req.status}</span></td>
+                <td>${req.requestedDate}</td>
+                <td>$${req.cost.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="showAlert('This is an old request. Please delete and create a new one with vehicle information.', 'info')" disabled>Old Format</button>
+                </td>
+            </tr>`;
+        } else {
+            html += `<tr>
+                <td>${req.id}</td>
+                <td>${req.clientName}</td>
+                <td>${req.jobType}</td>
+                <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
+                <td><span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 3px;">${req.status}</span></td>
+                <td>${req.requestedDate}</td>
+                <td>$${req.cost.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="openViewServiceRequestModal(${req.id})">View</button>
+                    ${canEditServiceRequest() ? `<button class="btn btn-sm btn-primary" onclick="openEditServiceRequestModal(${req.id})">Edit</button>` : ''}
+                    ${canEditServiceRequest() ? `<button class="btn btn-sm btn-danger" onclick="deleteServiceRequest(${req.id})">Delete</button>` : ''}
+                </td>
+            </tr>`;
+        }
     });
     
     html += '</tbody></table>';
@@ -767,12 +751,32 @@ async function openViewServiceRequestModal(id) {
 
 async function openEditServiceRequestModal(id) {
     try {
-        // Populate dropdowns first
-        await populateEditServiceClientDropdown();
-        await populateEditServiceEmployeeDropdown();
-        
-        // Then get the request data
+        // Get the request data
         const req = await apiCall(`/service-requests/${id}`, 'GET');
+        
+        // Populate client dropdown
+        const clients = await apiCall('/clients', 'GET');
+        const clientDropdown = document.getElementById('editServiceClientId');
+        clientDropdown.innerHTML = '<option value="">Select a client...</option>';
+        clients.forEach(client => {
+            const option = document.createElement('option');
+            option.value = client.id;
+            option.textContent = `${client.CustomerFirstName} ${client.CustomerLastName}`;
+            clientDropdown.appendChild(option);
+        });
+        
+        // Populate employee dropdown
+        const employees = await apiCall('/auth/users', 'GET');
+        const empDropdown = document.getElementById('editServiceAssignedTo');
+        empDropdown.innerHTML = '<option value="">Unassigned</option>';
+        employees.forEach(emp => {
+            const option = document.createElement('option');
+            option.value = emp.username;
+            option.textContent = `${emp.name} (${emp.role})`;
+            empDropdown.appendChild(option);
+        });
+        
+        // Set the form values
         document.getElementById('editServiceRequestId').value = id;
         document.getElementById('editServiceClientId').value = req.clientId;
         document.getElementById('editServiceJobType').value = req.jobType;
