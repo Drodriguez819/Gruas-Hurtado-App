@@ -1,4 +1,5 @@
-const API_URL = 'https://gruas-hurtado-app.onrender.com/api';let currentUser = null;
+const API_URL = 'https://gruas-hurtado-app.onrender.com/api';
+let currentUser = null;
 let editingClientId = null;
 let editingEmployeeId = null;
 
@@ -126,6 +127,10 @@ function userCan(action) {
     return perms[action] && perms[action].includes(currentUser.role);
 }
 
+function canEditServiceRequest() {
+    return currentUser && ['super_admin', 'admin', 'manager'].includes(currentUser.role);
+}
+
 function updateSidebarMenu() {
     document.getElementById('createAccountCard').style.display = userCan('manage_employees') ? 'block' : 'none';
 }
@@ -187,15 +192,9 @@ async function loadClientProfiles(searchTerm = '') {
             filteredProfiles = profiles.filter(p => {
                 const fullName = (p.CustomerFirstName + ' ' + p.CustomerLastName).toLowerCase();
                 const phone = (p.CustomerPhone || '').toLowerCase();
-                const vehicleInfo = (p.VehicleYear + ' ' + p.VehicleMake + ' ' + p.VehicleModel).toLowerCase();
-                const location = (p.VehicleLocation || '').toLowerCase();
-                const plate = (p.VehiclePlate || '').toLowerCase();
                 
                 return fullName.includes(searchLower) || 
-                       phone.includes(searchLower) || 
-                       vehicleInfo.includes(searchLower) || 
-                       location.includes(searchLower) ||
-                       plate.includes(searchLower);
+                       phone.includes(searchLower);
             });
         }
         
@@ -204,12 +203,11 @@ async function loadClientProfiles(searchTerm = '') {
             return;
         }
         
-        let html = '<table class="table"><thead><tr><th>Name</th><th>Phone</th><th>Vehicle</th><th>Location</th><th>Created By</th><th>Actions</th></tr></thead><tbody>';
+        let html = '<table class="table"><thead><tr><th>Name</th><th>Phone</th><th>Created By</th><th>Actions</th></tr></thead><tbody>';
         filteredProfiles.forEach(p => {
             const fullName = p.CustomerFirstName + ' ' + p.CustomerLastName;
-            const vehicleInfo = p.VehicleYear + ' ' + p.VehicleMake + ' ' + p.VehicleModel;
             const canEdit = userCan('edit_any_client') || (userCan('edit_own_client') && p.createdBy === currentUser.username);
-            html += `<tr><td>${fullName}</td><td>${p.CustomerPhone}</td><td>${vehicleInfo}</td><td>${p.VehicleLocation}</td><td>${p.createdByName}</td><td>
+            html += `<tr><td>${fullName}</td><td>${p.CustomerPhone}</td><td>${p.createdByName}</td><td>
                 ${canEdit ? `<button class="btn btn-sm btn-primary" onclick="openEditClientModal(${p.id})">Edit</button>` : ''}
                 ${userCan('delete_client') ? `<button class="btn btn-sm btn-danger" onclick="deleteClientProfile(${p.id})">Delete</button>` : ''}
             </td></tr>`;
@@ -229,52 +227,28 @@ function searchClientProfiles() {
 }
 
 async function createClientProfile() {
-    const customerTitle = document.getElementById('newCustomerTitle').value.trim();
     const customerFirstName = document.getElementById('newCustomerFirstName').value.trim();
     const customerLastName = document.getElementById('newCustomerLastName').value.trim();
-    const customerPhone = document.getElementById('newCustomerPhone').value.trim();  // ← ADD THIS
-    const vehicleYear = document.getElementById('newVehicleYear').value.trim();
-    const vehicleMake = document.getElementById('newVehicleMake').value.trim();
-    const vehicleModel = document.getElementById('newVehicleModel').value.trim();
-    const vehiclePlate = document.getElementById('newVehiclePlate').value.trim();
-    const vehicleColor = document.getElementById('newVehicleColor').value.trim();
-    const vehicleLocation = document.getElementById('newVehicleLocation').value.trim();  // ← ADD THIS
+    const customerPhone = document.getElementById('newCustomerPhone').value.trim();
     
-    if (!customerFirstName || !customerLastName || !vehicleMake || !vehicleModel) { 
+    if (!customerFirstName || !customerLastName || !customerPhone) { 
         showAlert('Fill all required fields', 'danger'); 
         return; 
     }
     
     try {
-        const vehicleInfo = vehicleYear + ' ' + vehicleMake + ' ' + vehicleModel;
-        
         await apiCall('/clients', 'POST', {
-            customer_title: customerTitle,
             customer_first_name: customerFirstName,
             customer_last_name: customerLastName,
-            customer_phone: customerPhone,  // ← NOW IT'S DEFINED
-            vehicle_info: vehicleInfo,
-            vehicle_year: vehicleYear,
-            vehicle_make: vehicleMake,
-            vehicle_model: vehicleModel,
-            vehicle_plate: vehiclePlate,
-            vehicle_color: vehicleColor,
-            vehicle_location: vehicleLocation,  // ← NOW IT'S DEFINED
+            customer_phone: customerPhone,
             created_by: currentUser.username,
             created_by_name: currentUser.name
         });
         
         // Clear form
-        document.getElementById('newCustomerTitle').value = '';
         document.getElementById('newCustomerFirstName').value = '';
         document.getElementById('newCustomerLastName').value = '';
         document.getElementById('newCustomerPhone').value = '';
-        document.getElementById('newVehicleYear').value = '';
-        document.getElementById('newVehicleMake').value = '';
-        document.getElementById('newVehicleModel').value = '';
-        document.getElementById('newVehiclePlate').value = '';
-        document.getElementById('newVehicleColor').value = '';
-        document.getElementById('newVehicleLocation').value = '';
         
         showAlert('Profile created', 'success');
         loadClientProfiles();
@@ -289,16 +263,9 @@ async function openEditClientModal(id) {
         const profile = await apiCall(`/clients/${id}`, 'GET');
         console.log('Profile data:', profile);
         
-        document.getElementById('editCustomerTitle').value = profile.CustomerName || '';
         document.getElementById('editCustomerFirstName').value = profile.CustomerFirstName || '';
         document.getElementById('editCustomerLastName').value = profile.CustomerLastName || '';
         document.getElementById('editCustomerPhone').value = profile.CustomerPhone || '';
-        document.getElementById('editVehicleYear').value = profile.VehicleYear || '';
-        document.getElementById('editVehicleMake').value = profile.VehicleMake || '';
-        document.getElementById('editVehicleModel').value = profile.VehicleModel || '';
-        document.getElementById('editVehiclePlate').value = profile.VehiclePlate || '';
-        document.getElementById('editVehicleColor').value = profile.VehicleColor || '';
-        document.getElementById('editVehicleLocation').value = profile.VehicleLocation || '';
         
         document.getElementById('editClientHistory').innerHTML = `Created by ${profile.createdByName}, edited by ${profile.lastEditedByName}`;
         document.getElementById('editClientModal').classList.add('active');
@@ -312,22 +279,10 @@ async function openEditClientModal(id) {
 
 async function saveClientProfile() {
     try {
-        const vehicleInfo = document.getElementById('editVehicleYear').value + ' ' + 
-                           document.getElementById('editVehicleMake').value + ' ' + 
-                           document.getElementById('editVehicleModel').value;
-        
         await apiCall(`/clients/${editingClientId}`, 'PUT', {
-            customer_title: document.getElementById('editCustomerTitle').value,
             customer_first_name: document.getElementById('editCustomerFirstName').value,
             customer_last_name: document.getElementById('editCustomerLastName').value,
             customer_phone: document.getElementById('editCustomerPhone').value,
-            vehicle_info: vehicleInfo,
-            vehicle_year: document.getElementById('editVehicleYear').value,
-            vehicle_make: document.getElementById('editVehicleMake').value,
-            vehicle_model: document.getElementById('editVehicleModel').value,
-            vehicle_plate: document.getElementById('editVehiclePlate').value,
-            vehicle_color: document.getElementById('editVehicleColor').value,
-            vehicle_location: document.getElementById('editVehicleLocation').value,
             last_edited_by: currentUser.username,
             last_edited_by_name: currentUser.name
         });
@@ -404,7 +359,6 @@ async function loadEmployeeAccounts() {
 }
 
 function generateTempPassword() {
-    // Generate random password
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let password = '';
     for (let i = 0; i < 12; i++) {
@@ -605,89 +559,19 @@ async function populateEmployeeDropdown() {
     }
 }
 
-function displayServiceRequests(requests) {
-    const container = document.getElementById('serviceRequestsContainer');
-    
-    if (requests.length === 0) {
-        container.innerHTML = '<p class="no-data">No service requests yet.</p>';
-        return;
-    }
-    
-    let html = '<table class="table" style="font-size: 14px;"><thead><tr><th>ID</th><th>Client</th><th>Job Type</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Requested Date</th><th>Cost</th><th>Actions</th></tr></thead><tbody>';
-    
-    requests.forEach(req => {
-        const priorityColor = req.priority === 'Emergency' ? 'red' : req.priority === 'High' ? 'orange' : 'green';
-        const statusColor = req.status === 'Pending' ? '#FFA500' : req.status === 'In Progress' ? '#4169E1' : req.status === 'Completed' ? '#228B22' : '#999';
-        
-        html += `<tr>
-            <td>${req.id}</td>
-            <td>${req.clientName}</td>
-            <td>${req.jobType}</td>
-            <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
-            <td><span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 3px;">${req.status}</span></td>
-            <td>${req.assignedToName || 'Unassigned'}</td>
-            <td>${req.requestedDate}</td>
-            <td>$${req.cost.toFixed(2)}</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="openEditServiceRequestModal(${req.id})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteServiceRequest(${req.id})">Delete</button>
-            </td>
-        </tr>`;
-    });
-    
-    html += '</tbody></table>';
-    container.innerHTML = html;
-}
-
-async function createServiceRequest() {
-    const clientId = document.getElementById('newServiceClientId').value.trim();
-    const jobType = document.getElementById('newServiceJobType').value.trim();
-    const description = document.getElementById('newServiceDescription').value.trim();
-    const priority = document.getElementById('newServicePriority').value;
-    const requestedDate = document.getElementById('newServiceRequestedDate').value;
-    const assignedTo = document.getElementById('newServiceAssignedTo').value || null;
-    const cost = parseFloat(document.getElementById('newServiceCost').value) || 0;
-    
-    if (!clientId || !jobType || !description || !requestedDate) {
-        showAlert('Fill all required fields', 'danger');
-        return;
-    }
-    
+async function populateEditServiceClientDropdown() {
     try {
-        let assignedToName = null;
-        if (assignedTo) {
-            const employees = await apiCall('/auth/users', 'GET');
-            const emp = employees.find(e => e.username === assignedTo);
-            assignedToName = emp ? emp.name : null;
-        }
-        
-        await apiCall('/service-requests', 'POST', {
-            client_id: parseInt(clientId),
-            job_type: jobType,
-            description: description,
-            priority: priority,
-            status: 'Pending',
-            assigned_to: assignedTo,
-            assigned_to_name: assignedToName,
-            requested_date: new Date(requestedDate).toISOString(),
-            cost: cost,
-            created_by: currentUser.username,
-            created_by_name: currentUser.name
+        const clients = await apiCall('/clients', 'GET');
+        const dropdown = document.getElementById('editServiceClientId');
+        dropdown.innerHTML = '<option value="">Select a client...</option>';
+        clients.forEach(client => {
+            const option = document.createElement('option');
+            option.value = client.id;
+            option.textContent = `${client.CustomerFirstName} ${client.CustomerLastName}`;
+            dropdown.appendChild(option);
         });
-        
-        // Clear form
-        document.getElementById('newServiceClientId').value = '';
-        document.getElementById('newServiceJobType').value = '';
-        document.getElementById('newServiceDescription').value = '';
-        document.getElementById('newServicePriority').value = 'Medium';
-        document.getElementById('newServiceRequestedDate').value = '';
-        document.getElementById('newServiceAssignedTo').value = '';
-        document.getElementById('newServiceCost').value = '';
-        
-        showAlert('Service request created', 'success');
-        loadServiceRequests();
     } catch (error) {
-        showAlert(error.message, 'danger');
+        console.error('Error loading clients:', error);
     }
 }
 
@@ -707,23 +591,217 @@ async function populateEditServiceEmployeeDropdown() {
     }
 }
 
+function displayServiceRequests(requests) {
+    const container = document.getElementById('serviceRequestsContainer');
+    
+    if (requests.length === 0) {
+        container.innerHTML = '<p class="no-data">No service requests yet.</p>';
+        return;
+    }
+    
+    let html = '<table class="table" style="font-size: 14px;"><thead><tr><th>ID</th><th>Client</th><th>Job Type</th><th>Priority</th><th>Status</th><th>Requested Date</th><th>Cost</th><th>Actions</th></tr></thead><tbody>';
+    
+    requests.forEach(req => {
+        const priorityColor = req.priority === 'Emergency' ? 'red' : req.priority === 'High' ? 'orange' : 'green';
+        const statusColor = req.status === 'Pending' ? '#FFA500' : req.status === 'In Progress' ? '#4169E1' : req.status === 'Completed' ? '#228B22' : '#999';
+        
+        html += `<tr>
+            <td>${req.id}</td>
+            <td>${req.clientName}</td>
+            <td>${req.jobType}</td>
+            <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
+            <td><span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 3px;">${req.status}</span></td>
+            <td>${req.requestedDate}</td>
+            <td>$${req.cost.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="openViewServiceRequestModal(${req.id})">View</button>
+                ${canEditServiceRequest() ? `<button class="btn btn-sm btn-primary" onclick="openEditServiceRequestModal(${req.id})">Edit</button>` : ''}
+                ${canEditServiceRequest() ? `<button class="btn btn-sm btn-danger" onclick="deleteServiceRequest(${req.id})">Delete</button>` : ''}
+            </td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+async function createServiceRequest() {
+    const clientId = document.getElementById('newServiceClientId').value.trim();
+    const jobType = document.getElementById('newServiceJobType').value.trim();
+    const description = document.getElementById('newServiceDescription').value.trim();
+    const priority = document.getElementById('newServicePriority').value;
+    const requestedDate = document.getElementById('newServiceRequestedDate').value;
+    const vehicleYear = document.getElementById('newVehicleYear').value.trim();
+    const vehicleMake = document.getElementById('newVehicleMake').value.trim();
+    const vehicleModel = document.getElementById('newVehicleModel').value.trim();
+    const vehiclePlate = document.getElementById('newVehiclePlate').value.trim();
+    const vehicleColor = document.getElementById('newVehicleColor').value.trim();
+    const vehicleLocation = document.getElementById('newVehicleLocation').value.trim();
+    const assignedTo = document.getElementById('newServiceAssignedTo').value || null;
+    const cost = parseFloat(document.getElementById('newServiceCost').value) || 0;
+    
+    if (!clientId || !jobType || !description || !requestedDate) {
+        showAlert('Fill all required fields', 'danger');
+        return;
+    }
+    
+    try {
+        let assignedToName = null;
+        if (assignedTo) {
+            const employees = await apiCall('/auth/users', 'GET');
+            const emp = employees.find(e => e.username === assignedTo);
+            assignedToName = emp ? emp.name : null;
+        }
+        
+        await apiCall('/service-requests', 'POST', {
+            client_id: parseInt(clientId),
+            vehicle_year: vehicleYear,
+            vehicle_make: vehicleMake,
+            vehicle_model: vehicleModel,
+            vehicle_plate: vehiclePlate,
+            vehicle_color: vehicleColor,
+            vehicle_location: vehicleLocation,
+            job_type: jobType,
+            description: description,
+            priority: priority,
+            status: 'Pending',
+            assigned_to: assignedTo,
+            assigned_to_name: assignedToName,
+            requested_date: new Date(requestedDate).toISOString(),
+            cost: cost,
+            created_by: currentUser.username,
+            created_by_name: currentUser.name
+        });
+        
+        // Clear form
+        document.getElementById('newServiceClientId').value = '';
+        document.getElementById('newServiceJobType').value = '';
+        document.getElementById('newServiceDescription').value = '';
+        document.getElementById('newServicePriority').value = 'Medium';
+        document.getElementById('newServiceRequestedDate').value = '';
+        document.getElementById('newVehicleYear').value = '';
+        document.getElementById('newVehicleMake').value = '';
+        document.getElementById('newVehicleModel').value = '';
+        document.getElementById('newVehiclePlate').value = '';
+        document.getElementById('newVehicleColor').value = '';
+        document.getElementById('newVehicleLocation').value = '';
+        document.getElementById('newServiceAssignedTo').value = '';
+        document.getElementById('newServiceCost').value = '';
+        
+        showAlert('Service request created', 'success');
+        loadServiceRequests();
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
+async function openViewServiceRequestModal(id) {
+    try {
+        const req = await apiCall(`/service-requests/${id}`, 'GET');
+        
+        let html = `
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Request Details</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><strong>Client:</strong> ${req.clientName}</div>
+                    <div><strong>Job Type:</strong> ${req.jobType}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Priority:</strong> ${req.priority}</div>
+                    <div><strong>Status:</strong> ${req.status}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Description:</strong> ${req.description}</div>
+                </div>
+            </div>
+
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div><strong>Year:</strong> ${req.vehicleYear || 'N/A'}</div>
+                    <div><strong>Make:</strong> ${req.vehicleMake || 'N/A'}</div>
+                    <div><strong>Model:</strong> ${req.vehicleModel || 'N/A'}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Plate:</strong> ${req.vehiclePlate || 'N/A'}</div>
+                    <div><strong>Color:</strong> ${req.vehicleColor || 'N/A'}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Location:</strong> ${req.vehicleLocation || 'N/A'}</div>
+                </div>
+            </div>
+
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Additional Info</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><strong>Assigned To:</strong> ${req.assignedToName || 'Unassigned'}</div>
+                    <div><strong>Cost:</strong> $${req.cost.toFixed(2)}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Requested Date:</strong> ${req.requestedDate}</div>
+                </div>
+                ${req.notes ? `<div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Notes:</strong> ${req.notes}</div>
+                </div>` : ''}
+            </div>
+
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Audit Info</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><strong>Created By:</strong> ${req.createdByName} (${req.createdBy})</div>
+                    <div><strong>Created Date:</strong> ${req.createdDate}</div>
+                </div>
+                ${req.lastEditedBy ? `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Last Edited By:</strong> ${req.lastEditedByName} (${req.lastEditedBy})</div>
+                    <div><strong>Last Updated:</strong> ${req.lastUpdatedDate}</div>
+                </div>` : ''}
+            </div>
+        `;
+        
+        document.getElementById('viewServiceRequestContent').innerHTML = html;
+        document.getElementById('viewServiceRequestModal').classList.add('active');
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
 async function openEditServiceRequestModal(id) {
     try {
-        // Populate the dropdown FIRST
+        // Populate dropdowns first
+        await populateEditServiceClientDropdown();
         await populateEditServiceEmployeeDropdown();
         
         // Then get the request data
         const req = await apiCall(`/service-requests/${id}`, 'GET');
         document.getElementById('editServiceRequestId').value = id;
+        document.getElementById('editServiceClientId').value = req.clientId;
         document.getElementById('editServiceJobType').value = req.jobType;
         document.getElementById('editServiceDescription').value = req.description;
         document.getElementById('editServicePriority').value = req.priority;
         document.getElementById('editServiceStatus').value = req.status;
+        document.getElementById('editVehicleYear').value = req.vehicleYear || '';
+        document.getElementById('editVehicleMake').value = req.vehicleMake || '';
+        document.getElementById('editVehicleModel').value = req.vehicleModel || '';
+        document.getElementById('editVehiclePlate').value = req.vehiclePlate || '';
+        document.getElementById('editVehicleColor').value = req.vehicleColor || '';
+        document.getElementById('editVehicleLocation').value = req.vehicleLocation || '';
+        document.getElementById('editServiceAssignedTo').value = req.assignedTo || '';
         document.getElementById('editServiceCost').value = req.cost;
         document.getElementById('editServiceNotes').value = req.notes || '';
         
-        // Set the assigned employee AFTER populating the dropdown
-        document.getElementById('editServiceAssignedTo').value = req.assigned_to || '';
+        // Show audit info
+        let auditHtml = `<div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">Audit Info</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div><strong>Created By:</strong> ${req.createdByName} (${req.createdBy})</div>
+                <div><strong>Created Date:</strong> ${req.createdDate}</div>
+            </div>
+            ${req.lastEditedBy ? `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                <div><strong>Last Edited By:</strong> ${req.lastEditedByName} (${req.lastEditedBy})</div>
+                <div><strong>Last Updated:</strong> ${req.lastUpdatedDate}</div>
+            </div>` : ''}
+        </div>`;
+        document.getElementById('editServiceAuditInfo').innerHTML = auditHtml;
         
         document.getElementById('editServiceRequestModal').classList.add('active');
     } catch (error) {
@@ -733,10 +811,17 @@ async function openEditServiceRequestModal(id) {
 
 async function saveServiceRequest() {
     const id = document.getElementById('editServiceRequestId').value;
+    const clientId = document.getElementById('editServiceClientId').value;
     const jobType = document.getElementById('editServiceJobType').value;
     const description = document.getElementById('editServiceDescription').value;
     const priority = document.getElementById('editServicePriority').value;
     const status = document.getElementById('editServiceStatus').value;
+    const vehicleYear = document.getElementById('editVehicleYear').value;
+    const vehicleMake = document.getElementById('editVehicleMake').value;
+    const vehicleModel = document.getElementById('editVehicleModel').value;
+    const vehiclePlate = document.getElementById('editVehiclePlate').value;
+    const vehicleColor = document.getElementById('editVehicleColor').value;
+    const vehicleLocation = document.getElementById('editVehicleLocation').value;
     const assignedTo = document.getElementById('editServiceAssignedTo').value || null;
     const cost = parseFloat(document.getElementById('editServiceCost').value) || 0;
     const notes = document.getElementById('editServiceNotes').value;
@@ -750,6 +835,13 @@ async function saveServiceRequest() {
         }
         
         await apiCall(`/service-requests/${id}`, 'PUT', {
+            client_id: parseInt(clientId),
+            vehicle_year: vehicleYear,
+            vehicle_make: vehicleMake,
+            vehicle_model: vehicleModel,
+            vehicle_plate: vehiclePlate,
+            vehicle_color: vehicleColor,
+            vehicle_location: vehicleLocation,
             job_type: jobType,
             description: description,
             priority: priority,
@@ -757,7 +849,9 @@ async function saveServiceRequest() {
             assigned_to: assignedTo,
             assigned_to_name: assignedToName,
             cost: cost,
-            notes: notes
+            notes: notes,
+            last_edited_by: currentUser.username,
+            last_edited_by_name: currentUser.name
         });
         
         closeModal('editServiceRequestModal');
