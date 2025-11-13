@@ -136,6 +136,10 @@ def delete_user(user_id):
 
 @bp.route('/users/<int:user_id>/reset-password', methods=['POST', 'OPTIONS'])
 def reset_user_password(user_id):
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
     try:
         user = User.query.get(user_id)
         if not user:
