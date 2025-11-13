@@ -9,11 +9,7 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        raise ValueError("DATABASE_URL environment variable not set!")
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('postgresql://', 'postgresql+psycopg://')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tow_truck.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'your-secret-key-change-this'
     
@@ -21,11 +17,13 @@ def create_app():
     db.init_app(app)
     
     # Better CORS configuration
-    CORS(app, 
-         origins="*",
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         allow_headers=["Content-Type", "Authorization"],
-         supports_credentials=False)
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
     
     # Register blueprints
     from app.routes import auth, clients, employees, service_requests
