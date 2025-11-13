@@ -35,14 +35,35 @@ def get_client_service_requests(client_id):
 def create_service_request():
     try:
         data = request.get_json()
+        print(f"[CREATE SERVICE REQUEST] Received data: {data}")
         
         if not data or not data.get('client_id') or not data.get('job_type') or not data.get('description'):
             return jsonify({'error': 'Missing required fields'}), 400
+        
+        # Validate vehicle fields
+        vehicle_year = data.get('vehicle_year', '').strip() if data.get('vehicle_year') else ''
+        vehicle_make = data.get('vehicle_make', '').strip() if data.get('vehicle_make') else ''
+        vehicle_model = data.get('vehicle_model', '').strip() if data.get('vehicle_model') else ''
+        vehicle_location = data.get('vehicle_location', '').strip() if data.get('vehicle_location') else ''
+        
+        print(f"[CREATE SERVICE REQUEST] Processed vehicle fields: year={vehicle_year}, make={vehicle_make}, model={vehicle_model}, location={vehicle_location}")
+        
+        if not vehicle_year or not vehicle_make or not vehicle_model or not vehicle_location:
+            print(f"[CREATE SERVICE REQUEST] Validation failed - missing vehicle fields")
+            return jsonify({'error': 'Vehicle Year, Make, Model, and Location are required'}), 400
         
         requested_date = datetime.fromisoformat(data.get('requested_date')) if data.get('requested_date') else datetime.utcnow()
         
         service_req = ServiceRequest(
             client_id=data.get('client_id'),
+            vehicle_year=vehicle_year,
+            vehicle_make=vehicle_make,
+            vehicle_model=vehicle_model,
+            vehicle_plate=data.get('vehicle_plate', '').strip() if data.get('vehicle_plate') else '',
+            vehicle_color=data.get('vehicle_color', '').strip() if data.get('vehicle_color') else '',
+            vehicle_location=vehicle_location,
+            is_dangerous=data.get('is_dangerous', False),
+            has_heavy_traffic=data.get('has_heavy_traffic', False),
             job_type=data.get('job_type'),
             description=data.get('description'),
             priority=data.get('priority', 'Medium'),
@@ -72,7 +93,33 @@ def update_service_request(request_id):
             return jsonify({'error': 'Service request not found'}), 404
         
         data = request.get_json()
+        user_role = data.get('user_role', 'user')  # Get user role from request
         
+        print(f"[UPDATE SERVICE REQUEST] user_role: {user_role}, is_dangerous: {data.get('is_dangerous')}, has_heavy_traffic: {data.get('has_heavy_traffic')}")
+        
+        # Only super_admin and admin can edit is_dangerous and has_heavy_traffic
+        if user_role in ['super_admin', 'admin']:
+            if 'is_dangerous' in data:
+                service_req.is_dangerous = bool(data['is_dangerous'])
+                print(f"[UPDATE] Set is_dangerous to {service_req.is_dangerous}")
+            if 'has_heavy_traffic' in data:
+                service_req.has_heavy_traffic = bool(data['has_heavy_traffic'])
+                print(f"[UPDATE] Set has_heavy_traffic to {service_req.has_heavy_traffic}")
+        
+        if 'client_id' in data:
+            service_req.client_id = data['client_id']
+        if 'vehicle_year' in data:
+            service_req.vehicle_year = data['vehicle_year']
+        if 'vehicle_make' in data:
+            service_req.vehicle_make = data['vehicle_make']
+        if 'vehicle_model' in data:
+            service_req.vehicle_model = data['vehicle_model']
+        if 'vehicle_plate' in data:
+            service_req.vehicle_plate = data['vehicle_plate']
+        if 'vehicle_color' in data:
+            service_req.vehicle_color = data['vehicle_color']
+        if 'vehicle_location' in data:
+            service_req.vehicle_location = data['vehicle_location']
         if 'job_type' in data:
             service_req.job_type = data['job_type']
         if 'description' in data:
@@ -91,6 +138,12 @@ def update_service_request(request_id):
             service_req.notes = data['notes']
         if 'completion_date' in data and data['completion_date']:
             service_req.completion_date = datetime.fromisoformat(data['completion_date'])
+        
+        # Track who edited it
+        if 'last_edited_by' in data:
+            service_req.last_edited_by = data['last_edited_by']
+        if 'last_edited_by_name' in data:
+            service_req.last_edited_by_name = data['last_edited_by_name']
         
         db.session.commit()
         
