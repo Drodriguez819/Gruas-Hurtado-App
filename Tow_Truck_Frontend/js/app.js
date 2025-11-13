@@ -706,6 +706,8 @@ async function createServiceRequest() {
     const vehiclePlate = document.getElementById('newVehiclePlate').value.trim();
     const vehicleColor = document.getElementById('newVehicleColor').value.trim();
     const vehicleLocation = document.getElementById('newVehicleLocation').value.trim();
+    const isDangerous = document.getElementById('newLocationDangerous').checked;
+    const hasHeavyTraffic = document.getElementById('newLocationHeavyTraffic').checked;
     const assignedTo = document.getElementById('newServiceAssignedTo').value || null;
     const cost = parseFloat(document.getElementById('newServiceCost').value) || 0;
     
@@ -730,6 +732,8 @@ async function createServiceRequest() {
             vehicle_plate: vehiclePlate,
             vehicle_color: vehicleColor,
             vehicle_location: vehicleLocation,
+            is_dangerous: isDangerous,
+            has_heavy_traffic: hasHeavyTraffic,
             job_type: jobType,
             description: description,
             priority: priority,
@@ -754,6 +758,8 @@ async function createServiceRequest() {
         document.getElementById('newVehiclePlate').value = '';
         document.getElementById('newVehicleColor').value = '';
         document.getElementById('newVehicleLocation').value = '';
+        document.getElementById('newLocationDangerous').checked = false;
+        document.getElementById('newLocationHeavyTraffic').checked = false;
         document.getElementById('newServiceAssignedTo').value = '';
         document.getElementById('newServiceCost').value = '';
         
@@ -797,6 +803,10 @@ async function openViewServiceRequestModal(id) {
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
                     <div><strong>Location:</strong> ${req.vehicleLocation || 'N/A'}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Location is Dangerous:</strong> ${req.isDangerous ? '✓ Yes' : '✗ No'}</div>
+                    <div><strong>Location has Heavy Traffic:</strong> ${req.hasHeavyTraffic ? '✓ Yes' : '✗ No'}</div>
                 </div>
             </div>
 
@@ -874,6 +884,14 @@ async function openEditServiceRequestModal(id) {
         document.getElementById('editVehiclePlate').value = req.vehiclePlate || '';
         document.getElementById('editVehicleColor').value = req.vehicleColor || '';
         document.getElementById('editVehicleLocation').value = req.vehicleLocation || '';
+        document.getElementById('editLocationDangerous').checked = req.isDangerous || false;
+        document.getElementById('editLocationHeavyTraffic').checked = req.hasHeavyTraffic || false;
+        
+        // Only super_admin and admin can edit these checkboxes
+        const canEditFlags = currentUser && ['super_admin', 'admin'].includes(currentUser.role);
+        document.getElementById('editLocationDangerous').disabled = !canEditFlags;
+        document.getElementById('editLocationHeavyTraffic').disabled = !canEditFlags;
+        
         document.getElementById('editServiceAssignedTo').value = req.assignedTo || '';
         document.getElementById('editServiceCost').value = req.cost;
         document.getElementById('editServiceNotes').value = req.notes || '';
@@ -911,6 +929,8 @@ async function saveServiceRequest() {
     const vehiclePlate = document.getElementById('editVehiclePlate').value;
     const vehicleColor = document.getElementById('editVehicleColor').value;
     const vehicleLocation = document.getElementById('editVehicleLocation').value;
+    const isDangerous = document.getElementById('editLocationDangerous').checked;
+    const hasHeavyTraffic = document.getElementById('editLocationHeavyTraffic').checked;
     const assignedTo = document.getElementById('editServiceAssignedTo').value || null;
     const cost = parseFloat(document.getElementById('editServiceCost').value) || 0;
     const notes = document.getElementById('editServiceNotes').value;
@@ -931,6 +951,8 @@ async function saveServiceRequest() {
             vehicle_plate: vehiclePlate,
             vehicle_color: vehicleColor,
             vehicle_location: vehicleLocation,
+            is_dangerous: isDangerous,
+            has_heavy_traffic: hasHeavyTraffic,
             job_type: jobType,
             description: description,
             priority: priority,
@@ -939,6 +961,7 @@ async function saveServiceRequest() {
             assigned_to_name: assignedToName,
             cost: cost,
             notes: notes,
+            user_role: currentUser.role,
             last_edited_by: currentUser.username,
             last_edited_by_name: currentUser.name
         });
