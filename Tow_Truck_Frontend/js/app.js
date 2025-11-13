@@ -71,17 +71,45 @@ async function apiCall(endpoint, method = 'GET', data = null) {
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
     try {
+        // Show loading state
+        document.getElementById('loginStatus').style.display = 'block';
+        document.getElementById('loginStatusText').textContent = 'Logging in...';
+        document.querySelector('.btn-primary').disabled = true;
+        
         const user = await apiCall('/auth/login', 'POST', {
-            username: document.getElementById('username').value,
-            password: document.getElementById('password').value
+            username: username,
+            password: password
         });
+        
         currentUser = user;
         console.log('[LOGIN] Success:', currentUser);
-        showApp();
+        
+        // Show welcome message
+        document.getElementById('loginStatusText').textContent = `Welcome back, ${user.username}!`;
+        
+        // Wait a moment before showing app so user sees the welcome message
+        setTimeout(() => {
+            document.getElementById('loginStatus').style.display = 'none';
+            document.querySelector('.btn-primary').disabled = false;
+            showApp();
+        }, 1500);
+        
     } catch (error) {
         console.error('[LOGIN] Failed:', error.message);
-        showAlert('Invalid username or password', 'danger');
+        document.getElementById('loginStatus').style.display = 'none';
+        document.querySelector('.btn-primary').disabled = false;
+        
+        // Show specific error message
+        if (error.message.includes('Invalid')) {
+            showAlert('Incorrect username or password', 'danger');
+        } else {
+            showAlert(error.message, 'danger');
+        }
     }
 });
 
