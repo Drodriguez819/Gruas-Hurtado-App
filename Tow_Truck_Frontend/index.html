@@ -414,6 +414,11 @@
                 <label>Confirm Password</label>
                 <input type="password" id="changePasswordConfirm" placeholder="Confirm new password">
             </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="markPasswordTemporary"> Mark as temporary (user must change on next login)
+                </label>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('changeExistingPasswordModal')">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="submitChangeExistingPassword()">Change Password</button>
