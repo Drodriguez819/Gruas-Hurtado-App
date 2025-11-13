@@ -329,11 +329,21 @@ async function loadEmployeeAccounts() {
         employees.forEach((user, index) => {
             console.log('[LOAD EMPLOYEES] Processing user', index, user.username);
             let canEdit = false;
-            if (currentUser.role === 'super_admin') canEdit = user.role !== 'super_admin';
-            else if (currentUser.role === 'admin') canEdit = user.role === 'manager' || user.role === 'user';
-            else if (currentUser.role === 'manager') canEdit = user.role === 'user';
+            let canChangePassword = false;
+            
+            if (currentUser.role === 'super_admin') {
+                canEdit = user.role !== 'super_admin';
+                canChangePassword = user.role !== 'super_admin';
+            } else if (currentUser.role === 'admin') {
+                canEdit = user.role === 'manager' || user.role === 'user';
+                canChangePassword = user.role === 'manager' || user.role === 'user';
+            } else if (currentUser.role === 'manager') {
+                canEdit = user.role === 'user';
+                canChangePassword = user.role === 'user';
+            }
             
             html += `<tr><td>${user.username}</td><td>${user.name}</td><td>${user.role}</td><td>
+                ${canChangePassword ? `<button class="btn btn-sm btn-secondary" onclick="openChangePasswordModal(${user.id}, '${user.username}')">Change Password</button>` : ''}
                 ${canEdit ? `<button class="btn btn-sm btn-primary" onclick="openEditEmployeeModal(${user.id})">Edit</button>` : 'N/A'}
             </td></tr>`;
         });
@@ -488,6 +498,52 @@ async function deleteEmployeeAccount() {
         console.log('[DELETE EMPLOYEE] Complete - currentUser:', currentUser ? currentUser.username : 'NONE');
     } catch (error) {
         console.error('[DELETE EMPLOYEE ERROR]', error);
+        showAlert(error.message, 'danger');
+    }
+}
+
+let changingPasswordUserId = null;
+
+async function openChangePasswordModal(userId, username) {
+    try {
+        changingPasswordUserId = userId;
+        document.getElementById('changePasswordUsername').value = username;
+        document.getElementById('changePasswordNew').value = '';
+        document.getElementById('changePasswordConfirm').value = '';
+        document.getElementById('changeExistingPasswordModal').classList.add('active');
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
+async function submitChangeExistingPassword() {
+    const newPassword = document.getElementById('changePasswordNew').value;
+    const confirmPassword = document.getElementById('changePasswordConfirm').value;
+    
+    if (!newPassword || !confirmPassword) {
+        showAlert('Fill all password fields', 'danger');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showAlert('Passwords do not match', 'danger');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showAlert('Password must be at least 6 characters', 'danger');
+        return;
+    }
+    
+    try {
+        await apiCall(`/auth/users/${changingPasswordUserId}/reset-password`, 'POST', {
+            new_password: newPassword
+        });
+        
+        closeModal('changeExistingPasswordModal');
+        showAlert('Password changed successfully', 'success');
+        loadEmployeeAccounts();
+    } catch (error) {
         showAlert(error.message, 'danger');
     }
 }
