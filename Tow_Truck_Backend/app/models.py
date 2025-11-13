@@ -34,9 +34,17 @@ class ClientProfile(db.Model):
     __tablename__ = 'client_profiles'
     
     id = db.Column(db.Integer, primary_key=True)
+    customer_title = db.Column(db.String(10), nullable=False)
     customer_first_name = db.Column(db.String(80), nullable=False)
     customer_last_name = db.Column(db.String(80), nullable=False)
     customer_phone = db.Column(db.String(20), nullable=False)
+    vehicle_info = db.Column(db.String(120), nullable=False)
+    vehicle_year = db.Column(db.String(4), nullable=False)
+    vehicle_make = db.Column(db.String(80), nullable=False)
+    vehicle_model = db.Column(db.String(80), nullable=False)
+    vehicle_plate = db.Column(db.String(20), nullable=False)
+    vehicle_color = db.Column(db.String(30), nullable=False)
+    vehicle_location = db.Column(db.String(255), nullable=False)
     created_by = db.Column(db.String(80), nullable=False)
     created_by_name = db.Column(db.String(120), nullable=False)
     last_edited_by = db.Column(db.String(80), nullable=False)
@@ -47,9 +55,17 @@ class ClientProfile(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'CustomerName': self.customer_title,
             'CustomerFirstName': self.customer_first_name,
             'CustomerLastName': self.customer_last_name,
             'CustomerPhone': self.customer_phone,
+            'Vehicleinfo': self.vehicle_info,
+            'VehicleYear': self.vehicle_year,
+            'VehicleMake': self.vehicle_make,
+            'VehicleModel': self.vehicle_model,
+            'VehiclePlate': self.vehicle_plate,
+            'VehicleColor': self.vehicle_color,
+            'VehicleLocation': self.vehicle_location,
             'createdBy': self.created_by,
             'createdByName': self.created_by_name,
             'lastEditedBy': self.last_edited_by,
@@ -62,12 +78,6 @@ class ServiceRequest(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(db.Integer, db.ForeignKey('client_profiles.id'), nullable=False)
-    vehicle_year = db.Column(db.String(4), nullable=False)
-    vehicle_make = db.Column(db.String(80), nullable=False)
-    vehicle_model = db.Column(db.String(80), nullable=False)
-    vehicle_plate = db.Column(db.String(20), nullable=False)
-    vehicle_color = db.Column(db.String(30), nullable=False)
-    vehicle_location = db.Column(db.String(255), nullable=False)
     job_type = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text, nullable=False)
     priority = db.Column(db.String(20), nullable=False, default='Medium')
@@ -81,8 +91,6 @@ class ServiceRequest(db.Model):
     created_by = db.Column(db.String(80), nullable=False)
     created_by_name = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_edited_by = db.Column(db.String(80), nullable=True)
-    last_edited_by_name = db.Column(db.String(120), nullable=True)
     last_updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self):
@@ -93,12 +101,6 @@ class ServiceRequest(db.Model):
             'id': self.id,
             'clientId': self.client_id,
             'clientName': client_name,
-            'vehicleYear': self.vehicle_year,
-            'vehicleMake': self.vehicle_make,
-            'vehicleModel': self.vehicle_model,
-            'vehiclePlate': self.vehicle_plate,
-            'vehicleColor': self.vehicle_color,
-            'vehicleLocation': self.vehicle_location,
             'jobType': self.job_type,
             'description': self.description,
             'priority': self.priority,
@@ -111,8 +113,5 @@ class ServiceRequest(db.Model):
             'notes': self.notes,
             'createdBy': self.created_by,
             'createdByName': self.created_by_name,
-            'createdDate': self.created_at.strftime('%Y-%m-%d'),
-            'lastEditedBy': self.last_edited_by,
-            'lastEditedByName': self.last_edited_by_name,
-            'lastUpdatedDate': self.last_updated_at.strftime('%Y-%m-%d')
+            'createdDate': self.created_at.strftime('%Y-%m-%d')
         }
