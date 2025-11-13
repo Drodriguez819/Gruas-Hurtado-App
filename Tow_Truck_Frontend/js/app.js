@@ -519,7 +519,8 @@ async function openChangePasswordModal(userId, username) {
 async function submitChangeExistingPassword() {
     const newPassword = document.getElementById('changePasswordNew').value;
     const confirmPassword = document.getElementById('changePasswordConfirm').value;
-    const isTemporary = document.getElementById('markPasswordTemporary').checked;
+    const tempCheckbox = document.getElementById('markPasswordTemporary');
+    const isTemporary = tempCheckbox ? tempCheckbox.checked : false;
     
     if (!newPassword || !confirmPassword) {
         showAlert('Fill all password fields', 'danger');
