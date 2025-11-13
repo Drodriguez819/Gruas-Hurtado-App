@@ -18,25 +18,30 @@ def get_client(client_id):
 
 @bp.route('', methods=['POST'])
 def create_client():
-    data = request.get_json()
-    
-    if not data or not data.get('customer_first_name') or not data.get('customer_last_name'):
-        return jsonify({'error': 'Missing required fields'}), 400
-    
-    profile = ClientProfile(
-        customer_first_name=data.get('customer_first_name'),
-        customer_last_name=data.get('customer_last_name'),
-        customer_phone=data.get('customer_phone'),
-        created_by=data.get('created_by'),
-        created_by_name=data.get('created_by_name'),
-        last_edited_by=data.get('created_by'),
-        last_edited_by_name=data.get('created_by_name')
-    )
-    
-    db.session.add(profile)
-    db.session.commit()
-    
-    return jsonify({'message': 'Client created', 'client': profile.to_dict()}), 201
+    try:
+        data = request.get_json()
+        
+        if not data or not data.get('customer_first_name') or not data.get('customer_last_name'):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        profile = ClientProfile(
+            customer_first_name=data.get('customer_first_name'),
+            customer_last_name=data.get('customer_last_name'),
+            customer_phone=data.get('customer_phone'),
+            created_by=data.get('created_by'),
+            created_by_name=data.get('created_by_name'),
+            last_edited_by=data.get('created_by'),
+            last_edited_by_name=data.get('created_by_name')
+        )
+        
+        db.session.add(profile)
+        db.session.commit()
+        
+        return jsonify({'message': 'Client created', 'client': profile.to_dict()}), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"ERROR creating client: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/<int:client_id>', methods=['PUT'])
 def update_client(client_id):
@@ -62,11 +67,18 @@ def update_client(client_id):
 
 @bp.route('/<int:client_id>', methods=['DELETE'])
 def delete_client(client_id):
-    profile = ClientProfile.query.get(client_id)
-    if not profile:
-        return jsonify({'error': 'Client not found'}), 404
-    
-    db.session.delete(profile)
-    db.session.commit()
-    
-    return jsonify({'message': 'Client deleted'}), 200
+    try:
+        profile = ClientProfile.query.get(client_id)
+        if not profile:
+            return jsonify({'error': 'Client not found'}), 404
+        
+        db.session.delete(profile)
+        db.session.commit()
+        
+        return jsonify({'message': 'Client deleted'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"ERROR deleting client: {str(e)}")
+        if 'FOREIGN KEY constraint' in str(e) or 'foreign key' in str(e).lower():
+            return jsonify({'error': 'Cannot delete client with associated service requests. Delete service requests first.'}), 400
+        return jsonify({'error': str(e)}), 500
