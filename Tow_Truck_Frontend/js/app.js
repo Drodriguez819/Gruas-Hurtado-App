@@ -519,6 +519,7 @@ async function openChangePasswordModal(userId, username) {
 async function submitChangeExistingPassword() {
     const newPassword = document.getElementById('changePasswordNew').value;
     const confirmPassword = document.getElementById('changePasswordConfirm').value;
+    const isTemporary = document.getElementById('markPasswordTemporary').checked;
     
     if (!newPassword || !confirmPassword) {
         showAlert('Fill all password fields', 'danger');
@@ -537,11 +538,15 @@ async function submitChangeExistingPassword() {
     
     try {
         await apiCall(`/auth/users/${changingPasswordUserId}/reset-password`, 'POST', {
-            new_password: newPassword
+            new_password: newPassword,
+            is_temporary: isTemporary
         });
         
         closeModal('changeExistingPasswordModal');
-        showAlert('Password changed successfully', 'success');
+        const message = isTemporary ? 
+            'Password changed! User must change it on next login.' :
+            'Password changed successfully';
+        showAlert(message, 'success');
         loadEmployeeAccounts();
     } catch (error) {
         showAlert(error.message, 'danger');
