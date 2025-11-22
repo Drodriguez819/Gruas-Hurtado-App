@@ -593,6 +593,29 @@ function showAlert(msg, type) {
     setTimeout(() => alert.classList.remove('active'), 3000);
 }
 
+// PHASE 1: Handle client type toggle for service requests
+function handleClientTypeChange() {
+    const clientType = document.querySelector('input[name="clientType"]:checked').value;
+    const existingSection = document.getElementById('existingClientSection');
+    const newCustomerSection = document.getElementById('newCustomerSection');
+    
+    if (clientType === 'existing') {
+        existingSection.style.display = 'block';
+        newCustomerSection.style.display = 'none';
+    } else {
+        existingSection.style.display = 'none';
+        newCustomerSection.style.display = 'block';
+    }
+}
+
+// Add event listeners for radio buttons when page loads
+function setupClientTypeToggle() {
+    const radios = document.querySelectorAll('input[name="clientType"]');
+    radios.forEach(radio => {
+        radio.addEventListener('change', handleClientTypeChange);
+    });
+}
+
 // Service Requests Functions
 
 let allServiceRequests = [];
@@ -604,6 +627,7 @@ async function loadServiceRequests() {
         await populateClientDropdown();
         await populateEmployeeDropdown();
         displayServiceRequests(allServiceRequests);
+        setupClientTypeToggle();  // CORRECT - in try block!
         console.log('[LOAD SERVICE REQUESTS] Complete');
     } catch (error) {
         console.error('[LOAD SERVICE REQUESTS ERROR]', error);
@@ -695,7 +719,55 @@ function displayServiceRequests(requests) {
 }
 
 async function createServiceRequest() {
-    const clientId = document.getElementById('newServiceClientId').value.trim();
+    // Get client type selection
+    const clientType = document.querySelector('input[name="clientType"]:checked').value;
+    let clientId = null;
+    let oneTimeClientId = null;
+    
+    // PHASE 1: Handle new customer creation
+    if (clientType === 'other') {
+        // Get new customer info
+        const firstName = document.getElementById('newOTCFirstName').value.trim();
+        const lastName = document.getElementById('newOTCLastName').value.trim();
+        const phone = document.getElementById('newOTCPhone').value.trim();
+        const email = document.getElementById('newOTCEmail').value.trim();
+        const address = document.getElementById('newOTCAddress').value.trim();
+        
+        // Validate required fields
+        if (!firstName || !lastName || !phone) {
+            showAlert('Fill required fields: First Name, Last Name, Phone', 'danger');
+            return;
+        }
+        
+        try {
+            // Create one-time client first
+            const response = await apiCall('/one-time-clients', 'POST', {
+                first_name: firstName,
+                last_name: lastName,
+                phone: phone,
+                email: email || null,
+                address: address || null,
+                created_by: currentUser.username,
+                created_by_name: currentUser.name
+            });
+            
+            oneTimeClientId = response.client.id;
+            console.log('[CREATE SERVICE REQUEST] One-time client created:', oneTimeClientId);
+        } catch (error) {
+            showAlert('Error creating one-time client: ' + error.message, 'danger');
+            return;
+        }
+    } else {
+        // Use existing client
+        clientId = document.getElementById('newServiceClientId').value.trim();
+        
+        if (!clientId) {
+            showAlert('Please select a client', 'danger');
+            return;
+        }
+    }
+    
+    // Get service request details
     const jobType = document.getElementById('newServiceJobType').value.trim();
     const description = document.getElementById('newServiceDescription').value.trim();
     const priority = document.getElementById('newServicePriority').value;
@@ -711,12 +783,14 @@ async function createServiceRequest() {
     const assignedTo = document.getElementById('newServiceAssignedTo').value || null;
     const cost = parseFloat(document.getElementById('newServiceCost').value) || 0;
     
-    if (!clientId || !jobType || !description || !requestedDate) {
+    // Validate required fields
+    if (!jobType || !description || !requestedDate) {
         showAlert('Fill all required fields', 'danger');
         return;
     }
     
     try {
+        // Get assigned employee name if assigned
         let assignedToName = null;
         if (assignedTo) {
             const employees = await apiCall('/auth/users', 'GET');
@@ -724,8 +798,10 @@ async function createServiceRequest() {
             assignedToName = emp ? emp.name : null;
         }
         
+        // Create service request with either client_id or one_time_client_id
         await apiCall('/service-requests', 'POST', {
-            client_id: parseInt(clientId),
+            client_id: clientId ? parseInt(clientId) : null,
+            one_time_client_id: oneTimeClientId,
             vehicle_year: vehicleYear,
             vehicle_make: vehicleMake,
             vehicle_model: vehicleModel,
@@ -747,7 +823,14 @@ async function createServiceRequest() {
         });
         
         // Clear form
+        document.querySelector('input[name="clientType"][value="existing"]').checked = true;
+        handleClientTypeChange(); // Reset toggle
         document.getElementById('newServiceClientId').value = '';
+        document.getElementById('newOTCFirstName').value = '';
+        document.getElementById('newOTCLastName').value = '';
+        document.getElementById('newOTCPhone').value = '';
+        document.getElementById('newOTCEmail').value = '';
+        document.getElementById('newOTCAddress').value = '';
         document.getElementById('newServiceJobType').value = '';
         document.getElementById('newServiceDescription').value = '';
         document.getElementById('newServicePriority').value = 'Medium';
@@ -765,80 +848,6 @@ async function createServiceRequest() {
         
         showAlert('Service request created', 'success');
         loadServiceRequests();
-    } catch (error) {
-        showAlert(error.message, 'danger');
-    }
-}
-
-async function openViewServiceRequestModal(id) {
-    try {
-        const req = await apiCall(`/service-requests/${id}`, 'GET');
-        
-        let html = `
-            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px;">Request Details</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><strong>Client:</strong> ${req.clientName}</div>
-                    <div><strong>Job Type:</strong> ${req.jobType}</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Priority:</strong> ${req.priority}</div>
-                    <div><strong>Status:</strong> ${req.status}</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Description:</strong> ${req.description}</div>
-                </div>
-            </div>
-
-            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div><strong>Year:</strong> ${req.vehicleYear || 'N/A'}</div>
-                    <div><strong>Make:</strong> ${req.vehicleMake || 'N/A'}</div>
-                    <div><strong>Model:</strong> ${req.vehicleModel || 'N/A'}</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Plate:</strong> ${req.vehiclePlate || 'N/A'}</div>
-                    <div><strong>Color:</strong> ${req.vehicleColor || 'N/A'}</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Location:</strong> ${req.vehicleLocation || 'N/A'}</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Location is Dangerous:</strong> ${req.isDangerous ? '✓ Yes' : '✗ No'}</div>
-                    <div><strong>Location has Heavy Traffic:</strong> ${req.hasHeavyTraffic ? '✓ Yes' : '✗ No'}</div>
-                </div>
-            </div>
-
-            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px;">Additional Info</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><strong>Assigned To:</strong> ${req.assignedToName || 'Unassigned'}</div>
-                    <div><strong>Cost:</strong> $${req.cost.toFixed(2)}</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Requested Date:</strong> ${req.requestedDate}</div>
-                </div>
-                ${req.notes ? `<div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Notes:</strong> ${req.notes}</div>
-                </div>` : ''}
-            </div>
-
-            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px;">Audit Info</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><strong>Created By:</strong> ${req.createdByName} (${req.createdBy})</div>
-                    <div><strong>Created Date:</strong> ${req.createdDate}</div>
-                </div>
-                ${req.lastEditedBy ? `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                    <div><strong>Last Edited By:</strong> ${req.lastEditedByName} (${req.lastEditedBy})</div>
-                    <div><strong>Last Updated:</strong> ${req.lastUpdatedDate}</div>
-                </div>` : ''}
-            </div>
-        `;
-        
-        document.getElementById('viewServiceRequestContent').innerHTML = html;
-        document.getElementById('viewServiceRequestModal').classList.add('active');
     } catch (error) {
         showAlert(error.message, 'danger');
     }
