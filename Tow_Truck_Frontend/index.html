@@ -176,22 +176,29 @@
                                 </label>
                                 <label style="margin-left: 20px;">
                                     <input type="radio" name="clientType" value="other"> 
-                                    Enter New Customer
+                                    Create New Client
                                 </label>
                             </div>
 
-                            <!-- Existing Client Section -->
-                            <div class="form-group" id="existingClientSection" style="margin-bottom: 15px;">
-                                <label>Select Client *</label>
-                                <select id="newServiceClientId">
-                                    <option value="">Select a client...</option>
-                                </select>
+                            <!-- Existing Client Section - SEARCHABLE -->
+                            <div id="existingClientSection" style="margin-bottom: 15px;">
+                                <div class="form-group">
+                                    <label>Search Client by Name or ID *</label>
+                                    <input type="text" id="clientSearchBox" placeholder="Search by name or client ID (e.g., CLI000000001)..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;" oninput="searchClientsForServiceRequest()">
+                                </div>
+                                <div id="clientSearchResults" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; border-radius: 4px; display: none; background-color: #f9f9f9;">
+                                    <div id="searchResultsList"></div>
+                                </div>
+                                <div id="selectedClientDisplay" style="margin-top: 10px; padding: 10px; background-color: #e8f5e9; border-radius: 4px; display: none; border: 1px solid #4caf50;">
+                                    <strong>Selected Client:</strong> <span id="selectedClientName"></span> (<span id="selectedClientId"></span>)
+                                    <input type="hidden" id="newServiceClientId">
+                                </div>
                             </div>
 
-                            <!-- New Customer Section (Hidden by default) -->
+                            <!-- New Client Section (Hidden by default) -->
                             <div id="newCustomerSection" style="display: none; margin-bottom: 15px;">
                                 <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-                                    <h4 style="margin-top: 0;">New Customer Details</h4>
+                                    <h4 style="margin-top: 0;">New Client Details</h4>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                                         <div class="form-group">
                                             <label>First Name *</label>
@@ -202,20 +209,10 @@
                                             <input type="text" id="newOTCLastName" placeholder="Enter last name">
                                         </div>
                                     </div>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                                         <div class="form-group">
                                             <label>Phone *</label>
                                             <input type="text" id="newOTCPhone" placeholder="555-1234">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Email (Optional)</label>
-                                            <input type="email" id="newOTCEmail" placeholder="email@example.com">
-                                        </div>
-                                    </div>
-                                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
-                                        <div class="form-group">
-                                            <label>Address (Optional)</label>
-                                            <input type="text" id="newOTCAddress" placeholder="123 Main St">
                                         </div>
                                     </div>
                                 </div>
@@ -364,6 +361,8 @@
             </div>
         </div>
     </div>
+
+    <!-- MODALS (rest of modals remain the same as before) -->
 
     <div class="modal" id="editClientModal">
         <div class="modal-content">
