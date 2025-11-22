@@ -719,136 +719,138 @@ function displayServiceRequests(requests) {
 }
 
 async function createServiceRequest() {
-    // Get client type selection
-    const clientType = document.querySelector('input[name="clientType"]:checked').value;
-    let clientId = null;
-    let oneTimeClientId = null;
-    
-    // PHASE 1: Handle new customer creation
-    if (clientType === 'other') {
-        // Get new customer info
-        const firstName = document.getElementById('newOTCFirstName').value.trim();
-        const lastName = document.getElementById('newOTCLastName').value.trim();
-        const phone = document.getElementById('newOTCPhone').value.trim();
-        const email = document.getElementById('newOTCEmail').value.trim();
-        const address = document.getElementById('newOTCAddress').value.trim();
+    try {
+        // Get client type selection
+        const clientType = document.querySelector('input[name="clientType"]:checked').value;
+        let clientId = null;
+        
+        if (clientType === 'existing') {
+            // Use selected existing client
+            clientId = document.getElementById('newServiceClientId').value.trim();
+            
+            if (!clientId) {
+                showAlert('Please select a client', 'danger');
+                return;
+            }
+        } else {
+            // Create new client first
+            const firstName = document.getElementById('newOTCFirstName').value.trim();
+            const lastName = document.getElementById('newOTCLastName').value.trim();
+            const phone = document.getElementById('newOTCPhone').value.trim();
+            
+            if (!firstName || !lastName || !phone) {
+                showAlert('Fill required fields: First Name, Last Name, Phone', 'danger');
+                return;
+            }
+            
+            try {
+                // Create new client
+                const clientResponse = await apiCall('/clients', 'POST', {
+                    customer_first_name: firstName,
+                    customer_last_name: lastName,
+                    customer_phone: phone,
+                    created_by: currentUser.username,
+                    created_by_name: currentUser.name
+                });
+                
+                clientId = clientResponse.client.id;
+                console.log('[CREATE SERVICE REQUEST] New client created:', clientId);
+            } catch (error) {
+                showAlert('Error creating new client: ' + error.message, 'danger');
+                return;
+            }
+        }
+        
+        // Get service request details
+        const jobType = document.getElementById('newServiceJobType').value.trim();
+        const description = document.getElementById('newServiceDescription').value.trim();
+        const priority = document.getElementById('newServicePriority').value;
+        const requestedDate = document.getElementById('newServiceRequestedDate').value;
+        const vehicleYear = document.getElementById('newVehicleYear').value.trim();
+        const vehicleMake = document.getElementById('newVehicleMake').value.trim();
+        const vehicleModel = document.getElementById('newVehicleModel').value.trim();
+        const vehiclePlate = document.getElementById('newVehiclePlate').value.trim();
+        const vehicleColor = document.getElementById('newVehicleColor').value.trim();
+        const vehicleLocation = document.getElementById('newVehicleLocation').value.trim();
+        const isDangerous = document.getElementById('newLocationDangerous').checked;
+        const hasHeavyTraffic = document.getElementById('newLocationHeavyTraffic').checked;
+        const assignedTo = document.getElementById('newServiceAssignedTo').value || null;
+        const cost = parseFloat(document.getElementById('newServiceCost').value) || 0;
         
         // Validate required fields
-        if (!firstName || !lastName || !phone) {
-            showAlert('Fill required fields: First Name, Last Name, Phone', 'danger');
+        if (!jobType || !description || !requestedDate) {
+            showAlert('Fill all required fields', 'danger');
+            return;
+        }
+        
+        if (!vehicleYear || !vehicleMake || !vehicleModel || !vehicleLocation) {
+            showAlert('Fill all vehicle fields', 'danger');
             return;
         }
         
         try {
-            // Create one-time client first
-            const response = await apiCall('/one-time-clients', 'POST', {
-                first_name: firstName,
-                last_name: lastName,
-                phone: phone,
-                email: email || null,
-                address: address || null,
+            // Get assigned employee name if assigned
+            let assignedToName = null;
+            if (assignedTo) {
+                const employees = await apiCall('/auth/users', 'GET');
+                const emp = employees.find(e => e.username === assignedTo);
+                assignedToName = emp ? emp.name : null;
+            }
+            
+            // Create service request
+            await apiCall('/service-requests', 'POST', {
+                client_id: parseInt(clientId),
+                vehicle_year: vehicleYear,
+                vehicle_make: vehicleMake,
+                vehicle_model: vehicleModel,
+                vehicle_plate: vehiclePlate,
+                vehicle_color: vehicleColor,
+                vehicle_location: vehicleLocation,
+                is_dangerous: isDangerous,
+                has_heavy_traffic: hasHeavyTraffic,
+                job_type: jobType,
+                description: description,
+                priority: priority,
+                status: 'Pending',
+                assigned_to: assignedTo,
+                assigned_to_name: assignedToName,
+                requested_date: new Date(requestedDate).toISOString(),
+                cost: cost,
                 created_by: currentUser.username,
                 created_by_name: currentUser.name
             });
             
-            oneTimeClientId = response.client.id;
-            console.log('[CREATE SERVICE REQUEST] One-time client created:', oneTimeClientId);
+            // Clear form
+            document.querySelector('input[name="clientType"][value="existing"]').checked = true;
+            handleClientTypeChange(); // Reset toggle
+            document.getElementById('clientSearchBox').value = '';
+            document.getElementById('newServiceClientId').value = '';
+            document.getElementById('selectedClientDisplay').style.display = 'none';
+            document.getElementById('newOTCFirstName').value = '';
+            document.getElementById('newOTCLastName').value = '';
+            document.getElementById('newOTCPhone').value = '';
+            document.getElementById('newServiceJobType').value = '';
+            document.getElementById('newServiceDescription').value = '';
+            document.getElementById('newServicePriority').value = 'Medium';
+            document.getElementById('newServiceRequestedDate').value = '';
+            document.getElementById('newVehicleYear').value = '';
+            document.getElementById('newVehicleMake').value = '';
+            document.getElementById('newVehicleModel').value = '';
+            document.getElementById('newVehiclePlate').value = '';
+            document.getElementById('newVehicleColor').value = '';
+            document.getElementById('newVehicleLocation').value = '';
+            document.getElementById('newLocationDangerous').checked = false;
+            document.getElementById('newLocationHeavyTraffic').checked = false;
+            document.getElementById('newServiceAssignedTo').value = '';
+            document.getElementById('newServiceCost').value = '';
+            
+            showAlert('Service request created', 'success');
+            loadServiceRequests();
         } catch (error) {
-            showAlert('Error creating one-time client: ' + error.message, 'danger');
-            return;
+            showAlert(error.message, 'danger');
         }
-    } else {
-        // Use existing client
-        clientId = document.getElementById('newServiceClientId').value.trim();
-        
-        if (!clientId) {
-            showAlert('Please select a client', 'danger');
-            return;
-        }
-    }
-    
-    // Get service request details
-    const jobType = document.getElementById('newServiceJobType').value.trim();
-    const description = document.getElementById('newServiceDescription').value.trim();
-    const priority = document.getElementById('newServicePriority').value;
-    const requestedDate = document.getElementById('newServiceRequestedDate').value;
-    const vehicleYear = document.getElementById('newVehicleYear').value.trim();
-    const vehicleMake = document.getElementById('newVehicleMake').value.trim();
-    const vehicleModel = document.getElementById('newVehicleModel').value.trim();
-    const vehiclePlate = document.getElementById('newVehiclePlate').value.trim();
-    const vehicleColor = document.getElementById('newVehicleColor').value.trim();
-    const vehicleLocation = document.getElementById('newVehicleLocation').value.trim();
-    const isDangerous = document.getElementById('newLocationDangerous').checked;
-    const hasHeavyTraffic = document.getElementById('newLocationHeavyTraffic').checked;
-    const assignedTo = document.getElementById('newServiceAssignedTo').value || null;
-    const cost = parseFloat(document.getElementById('newServiceCost').value) || 0;
-    
-    // Validate required fields
-    if (!jobType || !description || !requestedDate) {
-        showAlert('Fill all required fields', 'danger');
-        return;
-    }
-    
-    try {
-        // Get assigned employee name if assigned
-        let assignedToName = null;
-        if (assignedTo) {
-            const employees = await apiCall('/auth/users', 'GET');
-            const emp = employees.find(e => e.username === assignedTo);
-            assignedToName = emp ? emp.name : null;
-        }
-        
-        // Create service request with either client_id or one_time_client_id
-        await apiCall('/service-requests', 'POST', {
-            client_id: clientId ? parseInt(clientId) : null,
-            one_time_client_id: oneTimeClientId,
-            vehicle_year: vehicleYear,
-            vehicle_make: vehicleMake,
-            vehicle_model: vehicleModel,
-            vehicle_plate: vehiclePlate,
-            vehicle_color: vehicleColor,
-            vehicle_location: vehicleLocation,
-            is_dangerous: isDangerous,
-            has_heavy_traffic: hasHeavyTraffic,
-            job_type: jobType,
-            description: description,
-            priority: priority,
-            status: 'Pending',
-            assigned_to: assignedTo,
-            assigned_to_name: assignedToName,
-            requested_date: new Date(requestedDate).toISOString(),
-            cost: cost,
-            created_by: currentUser.username,
-            created_by_name: currentUser.name
-        });
-        
-        // Clear form
-        document.querySelector('input[name="clientType"][value="existing"]').checked = true;
-        handleClientTypeChange(); // Reset toggle
-        document.getElementById('newServiceClientId').value = '';
-        document.getElementById('newOTCFirstName').value = '';
-        document.getElementById('newOTCLastName').value = '';
-        document.getElementById('newOTCPhone').value = '';
-        document.getElementById('newOTCEmail').value = '';
-        document.getElementById('newOTCAddress').value = '';
-        document.getElementById('newServiceJobType').value = '';
-        document.getElementById('newServiceDescription').value = '';
-        document.getElementById('newServicePriority').value = 'Medium';
-        document.getElementById('newServiceRequestedDate').value = '';
-        document.getElementById('newVehicleYear').value = '';
-        document.getElementById('newVehicleMake').value = '';
-        document.getElementById('newVehicleModel').value = '';
-        document.getElementById('newVehiclePlate').value = '';
-        document.getElementById('newVehicleColor').value = '';
-        document.getElementById('newVehicleLocation').value = '';
-        document.getElementById('newLocationDangerous').checked = false;
-        document.getElementById('newLocationHeavyTraffic').checked = false;
-        document.getElementById('newServiceAssignedTo').value = '';
-        document.getElementById('newServiceCost').value = '';
-        
-        showAlert('Service request created', 'success');
-        loadServiceRequests();
     } catch (error) {
+        console.error('[CREATE SERVICE REQUEST ERROR]', error);
         showAlert(error.message, 'danger');
     }
 }
