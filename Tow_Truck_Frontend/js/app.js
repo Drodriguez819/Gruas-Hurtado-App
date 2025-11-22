@@ -853,6 +853,80 @@ async function createServiceRequest() {
     }
 }
 
+async function openViewServiceRequestModal(id) {
+    try {
+        const req = await apiCall(`/service-requests/${id}`, 'GET');
+        
+        let html = `
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Request Details</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><strong>Client:</strong> ${req.clientName}</div>
+                    <div><strong>Job Type:</strong> ${req.jobType}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Priority:</strong> ${req.priority}</div>
+                    <div><strong>Status:</strong> ${req.status}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Description:</strong> ${req.description}</div>
+                </div>
+            </div>
+
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Vehicle Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div><strong>Year:</strong> ${req.vehicleYear || 'N/A'}</div>
+                    <div><strong>Make:</strong> ${req.vehicleMake || 'N/A'}</div>
+                    <div><strong>Model:</strong> ${req.vehicleModel || 'N/A'}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Plate:</strong> ${req.vehiclePlate || 'N/A'}</div>
+                    <div><strong>Color:</strong> ${req.vehicleColor || 'N/A'}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Location:</strong> ${req.vehicleLocation || 'N/A'}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Location is Dangerous:</strong> ${req.isDangerous ? '✓ Yes' : '✗ No'}</div>
+                    <div><strong>Location has Heavy Traffic:</strong> ${req.hasHeavyTraffic ? '✓ Yes' : '✗ No'}</div>
+                </div>
+            </div>
+
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Additional Info</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><strong>Assigned To:</strong> ${req.assignedToName || 'Unassigned'}</div>
+                    <div><strong>Cost:</strong> $${req.cost.toFixed(2)}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Requested Date:</strong> ${req.requestedDate}</div>
+                </div>
+                ${req.notes ? `<div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Notes:</strong> ${req.notes}</div>
+                </div>` : ''}
+            </div>
+
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Audit Info</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><strong>Created By:</strong> ${req.createdByName} (${req.createdBy})</div>
+                    <div><strong>Created Date:</strong> ${req.createdDate}</div>
+                </div>
+                ${req.lastEditedBy ? `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div><strong>Last Edited By:</strong> ${req.lastEditedByName} (${req.lastEditedBy})</div>
+                    <div><strong>Last Updated:</strong> ${req.lastUpdatedDate}</div>
+                </div>` : ''}
+            </div>
+        `;
+        
+        document.getElementById('viewServiceRequestContent').innerHTML = html;
+        document.getElementById('viewServiceRequestModal').classList.add('active');
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
 async function openEditServiceRequestModal(id) {
     try {
         // Get the request data
