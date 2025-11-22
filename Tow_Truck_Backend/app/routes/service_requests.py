@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import ServiceRequest, ClientProfile, OneTimeClient
+from app.models import ServiceRequest, ClientProfile, generate_service_request_number
 from datetime import datetime
 
 bp = Blueprint('service_requests', __name__, url_prefix='/api/service-requests')
@@ -37,12 +37,11 @@ def create_service_request():
         data = request.get_json()
         print(f"[CREATE SERVICE REQUEST] Received data: {data}")
         
-        # Validate that either client_id or one_time_client_id is provided
+        # Validate client_id is provided (required)
         client_id = data.get('client_id')
-        one_time_client_id = data.get('one_time_client_id')
         
-        if not client_id and not one_time_client_id:
-            return jsonify({'error': 'Either client_id or one_time_client_id must be provided'}), 400
+        if not client_id:
+            return jsonify({'error': 'client_id is required'}), 400
         
         if not data.get('job_type') or not data.get('description'):
             return jsonify({'error': 'Missing required fields: job_type, description'}), 400
@@ -61,9 +60,12 @@ def create_service_request():
         
         requested_date = datetime.fromisoformat(data.get('requested_date')) if data.get('requested_date') else datetime.utcnow()
         
+        # Generate sequential service request number
+        service_request_number = generate_service_request_number()
+        
         service_req = ServiceRequest(
+            service_request_number=service_request_number,
             client_id=client_id,
-            one_time_client_id=one_time_client_id,
             vehicle_year=vehicle_year,
             vehicle_make=vehicle_make,
             vehicle_model=vehicle_model,
@@ -116,8 +118,6 @@ def update_service_request(request_id):
         
         if 'client_id' in data:
             service_req.client_id = data['client_id']
-        if 'one_time_client_id' in data:
-            service_req.one_time_client_id = data['one_time_client_id']
         if 'vehicle_year' in data:
             service_req.vehicle_year = data['vehicle_year']
         if 'vehicle_make' in data:
