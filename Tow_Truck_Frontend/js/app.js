@@ -200,6 +200,7 @@ async function loadClientProfiles(searchTerm = '') {
     try {
         console.log('[LOAD CLIENT PROFILES]');
         const profiles = await apiCall('/clients', 'GET');
+        const allServiceRequests = await apiCall('/service-requests', 'GET');
         const container = document.getElementById('clientProfilesContainer');
         
         if (profiles.length === 0) {
@@ -207,16 +208,15 @@ async function loadClientProfiles(searchTerm = '') {
             return;
         }
         
-        // Filter profiles based on search term
         let filteredProfiles = profiles;
         if (searchTerm.trim() !== '') {
             const searchLower = searchTerm.toLowerCase();
             filteredProfiles = profiles.filter(p => {
                 const fullName = (p.CustomerFirstName + ' ' + p.CustomerLastName).toLowerCase();
                 const phone = (p.CustomerPhone || '').toLowerCase();
+                const clientId = (p.clientIdNumber || '').toLowerCase();
                 
-                return fullName.includes(searchLower) || 
-                       phone.includes(searchLower);
+                return fullName.includes(searchLower) || phone.includes(searchLower) || clientId.includes(searchLower);
             });
         }
         
@@ -225,15 +225,28 @@ async function loadClientProfiles(searchTerm = '') {
             return;
         }
         
-        let html = '<table class="table"><thead><tr><th>Name</th><th>Phone</th><th>Created By</th><th>Actions</th></tr></thead><tbody>';
+        let html = '<table class="table"><thead><tr><th>Client ID</th><th>Name</th><th>Phone</th><th>Service Requests</th><th>Created By</th><th>Actions</th></tr></thead><tbody>';
+        
         filteredProfiles.forEach(p => {
             const fullName = p.CustomerFirstName + ' ' + p.CustomerLastName;
+            const clientId = p.clientIdNumber || 'N/A';
+            const clientRequests = allServiceRequests.filter(sr => sr.clientId === p.id);
+            const requestCount = clientRequests.length;
             const canEdit = userCan('edit_any_client') || (userCan('edit_own_client') && p.createdBy === currentUser.username);
-            html += `<tr><td>${fullName}</td><td>${p.CustomerPhone}</td><td>${p.createdByName}</td><td>
-                ${canEdit ? `<button class="btn btn-sm btn-primary" onclick="openEditClientModal(${p.id})">Edit</button>` : ''}
-                ${userCan('delete_client') ? `<button class="btn btn-sm btn-danger" onclick="deleteClientProfile(${p.id})">Delete</button>` : ''}
-            </td></tr>`;
+            
+            html += `<tr style="cursor: pointer;" onclick="expandClientDetails(${p.id}, '${fullName}', '${clientId}')">
+                <td><strong>${clientId}</strong></td>
+                <td>${fullName}</td>
+                <td>${p.CustomerPhone}</td>
+                <td><span style="background: #4169E1; color: white; padding: 4px 8px; border-radius: 3px;">${requestCount}</span></td>
+                <td>${p.createdByName}</td>
+                <td onclick="event.stopPropagation();">
+                    ${canEdit ? `<button class="btn btn-sm btn-primary" onclick="openEditClientModal(${p.id})">Edit</button>` : ''}
+                    ${userCan('delete_client') ? `<button class="btn btn-sm btn-danger" onclick="deleteClientProfile(${p.id})">Delete</button>` : ''}
+                </td>
+            </tr>`;
         });
+        
         html += '</tbody></table>';
         container.innerHTML = html;
         console.log('[LOAD CLIENT PROFILES] Complete');
@@ -246,6 +259,44 @@ async function loadClientProfiles(searchTerm = '') {
 function searchClientProfiles() {
     const searchTerm = document.getElementById('clientSearchInput').value;
     loadClientProfiles(searchTerm);
+}
+
+function expandClientDetails(clientId, clientName, clientIdNumber) {
+    const clientRequests = allServiceRequests.filter(sr => sr.clientId === clientId);
+    
+    let detailsHtml = `
+        <div style="border: 2px solid #4169E1; padding: 15px; margin-top: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <h3 style="margin-top: 0; color: #4169E1;">Client: ${clientName} (${clientIdNumber})</h3>
+            <h4>Service Requests (${clientRequests.length})</h4>
+    `;
+    
+    if (clientRequests.length === 0) {
+        detailsHtml += '<p style="color: #999;">No service requests for this client yet.</p>';
+    } else {
+        detailsHtml += '<table class="table" style="font-size: 14px;"><thead><tr><th>SR ID</th><th>Job Type</th><th>Priority</th><th>Status</th><th>Requested Date</th><th>Cost</th></tr></thead><tbody>';
+        
+        clientRequests.forEach(sr => {
+            const priorityColor = sr.priority === 'Emergency' ? 'red' : sr.priority === 'High' ? 'orange' : 'green';
+            const statusColor = sr.status === 'Pending' ? '#FFA500' : sr.status === 'In Progress' ? '#4169E1' : sr.status === 'Completed' ? '#228B22' : '#999';
+            
+            detailsHtml += `<tr onclick="openViewServiceRequestModal(${sr.id})" style="cursor: pointer;">
+                <td><strong>${sr.serviceRequestNumber || sr.id}</strong></td>
+                <td>${sr.jobType}</td>
+                <td><span style="color: ${priorityColor}; font-weight: bold;">${sr.priority}</span></td>
+                <td><span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 3px;">${sr.status}</span></td>
+                <td>${sr.requestedDate}</td>
+                <td>$${sr.cost.toFixed(2)}</td>
+            </tr>`;
+        });
+        
+        detailsHtml += '</tbody></table>';
+    }
+    
+    detailsHtml += '<button class="btn btn-secondary" onclick="loadClientProfiles()" style="margin-top: 15px;">Close Details</button>';
+    detailsHtml += '</div>';
+    
+    const container = document.getElementById('clientProfilesContainer');
+    container.innerHTML += detailsHtml;
 }
 
 async function createClientProfile() {
