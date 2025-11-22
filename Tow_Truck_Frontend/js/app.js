@@ -792,16 +792,16 @@ function displayServiceRequests(requests) {
         return;
     }
     
-    let html = '<table class="table" style="font-size: 14px;"><thead><tr><th>ID</th><th>Client</th><th>Job Type</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Requested Date</th><th>Cost</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table class="table" style="font-size: 14px;"><thead><tr><th>SR ID</th><th>Client</th><th>Job Type</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Requested Date</th><th>Cost</th><th>Actions</th></tr></thead><tbody>';
     
     requests.forEach(req => {
+        const srNumber = req.serviceRequestNumber || `SR${req.id}`;
         const priorityColor = req.priority === 'Emergency' ? 'red' : req.priority === 'High' ? 'orange' : 'green';
         const statusColor = req.status === 'Pending' ? '#FFA500' : req.status === 'In Progress' ? '#4169E1' : req.status === 'Completed' ? '#228B22' : '#999';
         
-        // Handle old requests that might not have vehicle fields
         if (!req.vehicleYear && !req.vehicleMake) {
             html += `<tr style="opacity: 0.6;">
-                <td>${req.id}</td>
+                <td><strong>${srNumber}</strong></td>
                 <td>${req.clientName}</td>
                 <td>${req.jobType}</td>
                 <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
@@ -809,12 +809,12 @@ function displayServiceRequests(requests) {
                 <td>${req.requestedDate}</td>
                 <td>$${req.cost.toFixed(2)}</td>
                 <td>
-                    <button class="btn btn-sm btn-secondary" onclick="showAlert('This is an old request. Please delete and create a new one with vehicle information.', 'info')" disabled>Old Format</button>
+                    <button class="btn btn-sm btn-secondary" disabled>Old Format</button>
                 </td>
             </tr>`;
         } else {
             html += `<tr>
-                <td>${req.id}</td>
+                <td><strong>${srNumber}</strong></td>
                 <td>${req.clientName}</td>
                 <td>${req.jobType}</td>
                 <td><span style="color: ${priorityColor}; font-weight: bold;">${req.priority}</span></td>
@@ -975,10 +975,11 @@ async function createServiceRequest() {
 async function openViewServiceRequestModal(id) {
     try {
         const req = await apiCall(`/service-requests/${id}`, 'GET');
+        const srNumber = req.serviceRequestNumber || `SR${req.id}`;
         
         let html = `
             <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px;">Request Details</h3>
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Request #${srNumber}</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div><strong>Client:</strong> ${req.clientName}</div>
                     <div><strong>Job Type:</strong> ${req.jobType}</div>
