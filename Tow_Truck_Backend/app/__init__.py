@@ -38,11 +38,12 @@ def create_app():
         return jsonify({'message': 'Database reset complete'}), 200
     
     # Register blueprints
-    from app.routes import auth, clients, employees, service_requests
+    from app.routes import auth, clients, employees, service_requests, one_time_clients
     app.register_blueprint(auth.bp)
     app.register_blueprint(clients.bp)
     app.register_blueprint(employees.bp)
     app.register_blueprint(service_requests.bp)
+    app.register_blueprint(one_time_clients.bp)
     
     # Create database tables
     with app.app_context():
