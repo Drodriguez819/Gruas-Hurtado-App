@@ -2,6 +2,28 @@ from app import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
+def generate_client_id_number():
+    """Generate next sequential client ID number"""
+    last_client = ClientProfile.query.order_by(ClientProfile.id.desc()).first()
+    if last_client:
+        # Extract the number from the last ID (e.g., "CLI000000005" -> 5)
+        last_num = int(last_client.client_id_number.replace('CLI', ''))
+        next_num = last_num + 1
+    else:
+        next_num = 1
+    return f"CLI{next_num:09d}"  # CLI000000001, CLI000000002, etc
+
+def generate_service_request_number():
+    """Generate next sequential service request number"""
+    last_sr = ServiceRequest.query.order_by(ServiceRequest.id.desc()).first()
+    if last_sr:
+        # Extract the number from the last ID (e.g., "SR000000005" -> 5)
+        last_num = int(last_sr.service_request_number.replace('SR', ''))
+        next_num = last_num + 1
+    else:
+        next_num = 1
+    return f"SR{next_num:09d}"  # SR000000001, SR000000002, etc
+
 class User(db.Model):
     __tablename__ = 'users'
     
@@ -34,6 +56,7 @@ class ClientProfile(db.Model):
     __tablename__ = 'client_profiles'
     
     id = db.Column(db.Integer, primary_key=True)
+    client_id_number = db.Column(db.String(20), unique=True, nullable=False)  # CLI000000001, CLI000000002, etc
     customer_first_name = db.Column(db.String(80), nullable=False)
     customer_last_name = db.Column(db.String(80), nullable=False)
     customer_phone = db.Column(db.String(20), nullable=False)
@@ -47,6 +70,7 @@ class ClientProfile(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'clientIdNumber': self.client_id_number,
             'CustomerFirstName': self.customer_first_name,
             'CustomerLastName': self.customer_last_name,
             'CustomerPhone': self.customer_phone,
@@ -57,38 +81,12 @@ class ClientProfile(db.Model):
             'lastEditedDate': self.last_edited_at.strftime('%Y-%m-%d')
         }
 
-class OneTimeClient(db.Model):
-    __tablename__ = 'one_time_clients'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(80), nullable=False)
-    last_name = db.Column(db.String(80), nullable=False)
-    phone = db.Column(db.String(20), nullable=False)
-    email = db.Column(db.String(120), nullable=True)
-    address = db.Column(db.String(255), nullable=True)
-    created_by = db.Column(db.String(80), nullable=False)
-    created_by_name = db.Column(db.String(120), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'firstName': self.first_name,
-            'lastName': self.last_name,
-            'phone': self.phone,
-            'email': self.email,
-            'address': self.address,
-            'createdBy': self.created_by,
-            'createdByName': self.created_by_name,
-            'createdDate': self.created_at.strftime('%Y-%m-%d')
-        }
-
 class ServiceRequest(db.Model):
     __tablename__ = 'service_requests'
     
     id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer, db.ForeignKey('client_profiles.id'), nullable=True)
-    one_time_client_id = db.Column(db.Integer, db.ForeignKey('one_time_clients.id'), nullable=True)
+    service_request_number = db.Column(db.String(20), unique=True, nullable=False)  # SR000000001, SR000000002, etc
+    client_id = db.Column(db.Integer, db.ForeignKey('client_profiles.id'), nullable=False)
     vehicle_year = db.Column(db.String(4), nullable=False)
     vehicle_make = db.Column(db.String(80), nullable=False)
     vehicle_model = db.Column(db.String(80), nullable=False)
@@ -115,33 +113,25 @@ class ServiceRequest(db.Model):
     last_updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self):
-        # Get client name from either client_profiles or one_time_clients
+        # Get client name from client_profiles
         client_name = "Unknown"
         client_phone = ""
-        client_email = ""
-        client_address = ""
+        client_id_number = ""
         
         if self.client_id:
             client = ClientProfile.query.get(self.client_id)
             if client:
                 client_name = f"{client.customer_first_name} {client.customer_last_name}"
                 client_phone = client.customer_phone
-        elif self.one_time_client_id:
-            one_time_client = OneTimeClient.query.get(self.one_time_client_id)
-            if one_time_client:
-                client_name = f"{one_time_client.first_name} {one_time_client.last_name}"
-                client_phone = one_time_client.phone
-                client_email = one_time_client.email
-                client_address = one_time_client.address
+                client_id_number = client.client_id_number
         
         return {
             'id': self.id,
+            'serviceRequestNumber': self.service_request_number,
             'clientId': self.client_id,
-            'oneTimeClientId': self.one_time_client_id,
+            'clientIdNumber': client_id_number,
             'clientName': client_name,
             'clientPhone': client_phone,
-            'clientEmail': client_email,
-            'clientAddress': client_address,
             'vehicleYear': self.vehicle_year,
             'vehicleMake': self.vehicle_make,
             'vehicleModel': self.vehicle_model,
