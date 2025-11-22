@@ -57,11 +57,38 @@ class ClientProfile(db.Model):
             'lastEditedDate': self.last_edited_at.strftime('%Y-%m-%d')
         }
 
+class OneTimeClient(db.Model):
+    __tablename__ = 'one_time_clients'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(80), nullable=False)
+    last_name = db.Column(db.String(80), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(120), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
+    created_by = db.Column(db.String(80), nullable=False)
+    created_by_name = db.Column(db.String(120), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'firstName': self.first_name,
+            'lastName': self.last_name,
+            'phone': self.phone,
+            'email': self.email,
+            'address': self.address,
+            'createdBy': self.created_by,
+            'createdByName': self.created_by_name,
+            'createdDate': self.created_at.strftime('%Y-%m-%d')
+        }
+
 class ServiceRequest(db.Model):
     __tablename__ = 'service_requests'
     
     id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer, db.ForeignKey('client_profiles.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('client_profiles.id'), nullable=True)
+    one_time_client_id = db.Column(db.Integer, db.ForeignKey('one_time_clients.id'), nullable=True)
     vehicle_year = db.Column(db.String(4), nullable=False)
     vehicle_make = db.Column(db.String(80), nullable=False)
     vehicle_model = db.Column(db.String(80), nullable=False)
@@ -88,13 +115,33 @@ class ServiceRequest(db.Model):
     last_updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self):
-        client = ClientProfile.query.get(self.client_id)
-        client_name = f"{client.customer_first_name} {client.customer_last_name}" if client else "Unknown"
+        # Get client name from either client_profiles or one_time_clients
+        client_name = "Unknown"
+        client_phone = ""
+        client_email = ""
+        client_address = ""
+        
+        if self.client_id:
+            client = ClientProfile.query.get(self.client_id)
+            if client:
+                client_name = f"{client.customer_first_name} {client.customer_last_name}"
+                client_phone = client.customer_phone
+        elif self.one_time_client_id:
+            one_time_client = OneTimeClient.query.get(self.one_time_client_id)
+            if one_time_client:
+                client_name = f"{one_time_client.first_name} {one_time_client.last_name}"
+                client_phone = one_time_client.phone
+                client_email = one_time_client.email
+                client_address = one_time_client.address
         
         return {
             'id': self.id,
             'clientId': self.client_id,
+            'oneTimeClientId': self.one_time_client_id,
             'clientName': client_name,
+            'clientPhone': client_phone,
+            'clientEmail': client_email,
+            'clientAddress': client_address,
             'vehicleYear': self.vehicle_year,
             'vehicleMake': self.vehicle_make,
             'vehicleModel': self.vehicle_model,
